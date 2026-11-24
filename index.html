@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#e52316" />
+    <title>Tiger Trafficking — closing sequence prototype</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <div class="proto-banner" role="note">
+      Prototype · closing sequence (frames 92–101) · figures pending verification
+    </div>
+
+    <!-- Frame 92 · lead-in to the map (HOLD · READ) -->
+    <section class="chapter" aria-labelledby="ch07-title">
+      <div class="chapter__inner">
+        <h2 id="ch07-title" class="display chapter__title">Tigers extinct</h2>
+        <p class="chapter__text">
+          Wild tigers once lived in <strong>Cambodia, Laos and Vietnam</strong>. They have disappeared from all
+          three. Elsewhere in Asia, they survive in parts of their former range.
+        </p>
+      </div>
+      <span class="chapter__number" aria-hidden="true">07.</span>
+    </section>
+
+    <!-- Frames 93–101 · closing -->
+    <section class="closing" id="closing" aria-label="Closing">
+      <div class="stage">
+        <!-- 93 · HOLD · EXPLORE -->
+        <div class="map" data-layer="map">
+          <div class="map__pan" tabindex="-1"></div>
+
+          <aside class="map-card" aria-live="polite">
+            <button class="map-card__close" type="button" aria-label="Close country card">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+            </button>
+            <h3 class="map-card__title">INDIA</h3>
+            <div class="map-card__body"></div>
+          </aside>
+
+          <aside class="map-legend" aria-label="Map layers">
+            <button class="map-legend__toggle" type="button" aria-expanded="false">
+              <span>Map layers</span>
+              <svg viewBox="0 0 24 14" aria-hidden="true"><path d="M1 13L12 2l11 11" /></svg>
+            </button>
+            <h3 class="map-legend__title">Map layers</h3>
+            <ul class="map-legend__list">
+              <li><span class="sw sw--wild"></span>Tiger range country with wild tigers in the 2023 estimate</li>
+              <li><span class="sw sw--extinct"></span>Tiger range country with 0 wild tigers in the 2023 estimate (extinct in the wild)</li>
+              <li><span class="sw sw--outside"></span>Outside the tiger range</li>
+              <li><span class="sw sw--circle"></span>Wild tigers, 2023 (Global Tiger Forum) — circle area ∝ number</li>
+              <li><span class="sw sw--none"></span>No wild tigers left (2023)</li>
+            </ul>
+            <p class="map-legend__note">
+              The tiger inside the land is decoration.<br />
+              Country figures in the card: seizures January 2000 – June 2025 (TRAFFIC).
+            </p>
+          </aside>
+        </div>
+
+        <div class="hint" aria-hidden="true">
+          <span>Scroll down</span>
+          <svg viewBox="0 0 135 73"><path d="M0.35 5L67.35 72L134.35 5" /></svg>
+        </div>
+
+        <!-- 94–97 · frontal tiger, then ~1 s of red -->
+        <div class="red-cover" aria-hidden="true"></div>
+        <div class="tiger tiger--frontal" aria-hidden="true"></div>
+
+        <!-- 101 · HOLD · READ. Real text from the start; only its visibility changes. -->
+        <div class="final">
+          <p class="final__sentence display">A tiger should never die for someone else’s profit.</p>
+          <nav class="final__controls" aria-label="Story actions">
+            <button type="button" class="ctl" data-action="share">Share</button>
+            <button type="button" class="ctl" data-action="credits">Credits</button>
+            <button type="button" class="ctl" data-action="top">Back to top</button>
+          </nav>
+          <div class="final__menu-slot" aria-hidden="true">Menu</div>
+        </div>
+
+        <!-- 98–100 · profile tiger crossing, uncovers the sentence -->
+        <div class="tiger tiger--profile" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

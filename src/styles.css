@@ -1,0 +1,209 @@
+:root {
+  --red: #e52316;
+  --black: #111111;
+  --extinct: #9e220a;
+  --green: #24520f;
+  --yellow: #ffdd03;
+  --orange: #e2560c;
+  --lime: #9bd65a;
+  --teal: #7fd6c6;
+  --sand: #d8d2c4;
+  --note: #3b321c;
+
+  /* Display face: free stand-in for Helvetica Neue Condensed Black */
+  --display: 'Archivo Variable', 'Arial Narrow', sans-serif;
+  --body: 'Roboto', system-ui, sans-serif;
+  --slab: 'Roboto Slab', Georgia, serif;
+  --card-title: 'Anton', 'Archivo Variable', sans-serif;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { margin: 0; background: var(--red); color: #fff; }
+body { font-family: var(--display); font-stretch: 100%; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+
+.display {
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 75%;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.proto-banner {
+  position: fixed; z-index: 50; top: 8px; left: 8px;
+  padding: 4px 8px; border-radius: 3px;
+  background: rgba(17, 17, 17, 0.75); color: var(--sand);
+  font: 12px/1.3 var(--body);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ 92 */
+.chapter { position: relative; min-height: 100svh; overflow: hidden; }
+.chapter__inner { position: absolute; left: 20.8vw; top: 46%; max-width: 58vw; }
+.chapter__title { margin: 0; font-size: clamp(56px, 6.94vw, 140px); line-height: 1; }
+.chapter__text { margin: 0.4em 0 0; font-size: clamp(22px, 3.47vw, 64px); line-height: 1.25; font-weight: 400; }
+.chapter__text strong { font-weight: 700; }
+.chapter__number { position: absolute; left: 0; bottom: -0.12em; font-size: clamp(56px, 6.94vw, 140px); line-height: 1; font-weight: 400; }
+
+/* ------------------------------------------------------------------ closing */
+/* 100vh stage + 150vh explorable map + 100vh runway while the jump plays */
+.closing { position: relative; height: 350vh; }
+.stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; background: var(--red); }
+
+.map { position: absolute; inset: 0; }
+.map__pan { position: absolute; inset: 0; }
+.map__svg { position: absolute; top: 0; left: -2.5vw; height: 100%; width: auto; aspect-ratio: 1000 / 900; display: block; }
+
+.country--outside { fill: transparent; stroke: rgba(17, 17, 17, 0.55); stroke-width: 0.6; }
+.country--wild { fill: var(--black); }
+.country--extinct { fill: var(--extinct); }
+.map__range .country { stroke: var(--red); stroke-width: 0.5; cursor: pointer; outline: none; transition: fill 0.15s; }
+.map__range .country:hover,
+.map__range .country:focus-visible { fill: #2a2a2a; }
+.map__range .country--extinct:hover,
+.map__range .country--extinct:focus-visible { fill: #b8301a; }
+.map__range .country.is-selected { stroke: var(--orange); stroke-width: 2.5; paint-order: stroke; }
+.map__range { /* draw the selected outline on top */ }
+.map__stripes { pointer-events: none; }
+.map__stripe { fill: none; stroke: var(--red); stroke-opacity: 0.42; stroke-width: 34; stroke-linejoin: miter; }
+
+.marker { pointer-events: none; }
+.marker--wild { fill: var(--green); stroke: #fff; stroke-width: 1.5; }
+.marker--wild.is-selected { stroke: var(--orange); stroke-width: 4; }
+.marker--extinct circle { fill: var(--extinct); stroke: #fff; stroke-width: 1.5; }
+.marker--extinct path { stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+.map__label {
+  font: 700 15px var(--slab); fill: #fff;
+  stroke: var(--black); stroke-width: 3; paint-order: stroke; stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Country card (desktop: top right, as in frame 93) */
+.map-card {
+  position: absolute; top: 0; right: 4.1vw; width: clamp(280px, 22.6vw, 360px);
+  padding: 14px 20px 18px; background: var(--black); color: #fff;
+  font: 400 14px/1.45 var(--body);
+}
+.map-card__title { margin: 0; font: 400 42px/1.05 var(--card-title); color: var(--yellow); }
+.map-card__body p { margin: 0; }
+.map-card__wild { font-weight: 700; font-size: 15px; color: var(--lime); }
+.map-card hr { border: 0; border-top: 1px solid var(--yellow); margin: 8px 0; }
+.map-card__period { font-size: 12px; color: var(--sand); margin-bottom: 6px !important; }
+.map-card__jailed { color: var(--teal); margin-top: 6px !important; }
+.map-card__pending { font-style: italic; color: var(--sand); opacity: 0.8; }
+.map-card__draft { margin-top: 10px !important; font-size: 11px; color: var(--sand); opacity: 0.7; }
+.map-card__close { display: none; }
+
+/* Legend (desktop: white box under the card) */
+.map-legend {
+  position: absolute; top: 30vh; right: 4.1vw; width: clamp(280px, 22.6vw, 360px);
+  padding: 16px 20px; background: #fff; color: var(--black); border: 1px solid var(--black);
+  font: 400 14px/1.4 var(--body);
+}
+.map-legend__toggle { display: none; }
+.map-legend__title { margin: 0 0 10px; font: 700 17px var(--slab); }
+.map-legend__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.map-legend__list li { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: center; }
+.map-legend__note { margin: 12px 0 0; font-size: 12.5px; color: var(--note); }
+.sw { width: 36px; height: 21px; display: block; }
+.sw--wild { background: var(--black); }
+.sw--extinct { background: var(--extinct); }
+.sw--outside { background: var(--red); border: 1px solid rgba(17, 17, 17, 0.55); }
+.sw--circle, .sw--none { width: 21px; height: 21px; border-radius: 50%; justify-self: center; }
+.sw--circle { background: var(--green); }
+.sw--none { background: #fff; border: 2px solid var(--extinct); }
+
+/* Scroll hint (frame 1 component) */
+.hint {
+  position: absolute; left: 50%; bottom: 3vh; transform: translateX(-50%);
+  display: grid; justify-items: center; gap: 2px; color: var(--black); pointer-events: none;
+  font: 900 15px var(--display); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.02em;
+}
+.hint svg { width: 90px; height: auto; fill: none; stroke: var(--black); stroke-width: 1.5; animation: hint-bob 1.6s ease-in-out infinite; }
+@keyframes hint-bob { 50% { transform: translateY(6px); } }
+
+/* ------------------------------------------------------------------ jump */
+.red-cover { position: absolute; inset: 0; background: var(--red); opacity: 0; visibility: hidden; }
+.tiger { position: absolute; pointer-events: none; will-change: transform; }
+.tiger--frontal { opacity: 0; visibility: hidden; }
+.tiger--profile { top: 0; left: 0; }
+.tiger-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* ------------------------------------------------------------------ 101 */
+.final { position: absolute; inset: 0; pointer-events: none; }
+.final__sentence {
+  position: absolute; left: 21.5vw; top: 33vh; margin: 0; max-width: 62vw;
+  font-size: clamp(48px, 6.94vw, 150px); line-height: 1.12;
+  /* hidden by clipping only, so screen readers can always read it */
+  clip-path: inset(0 100% 0 0);
+}
+.final__controls {
+  position: absolute; left: 21.5vw; bottom: 9vh; display: flex; flex-wrap: wrap; gap: 28px;
+  pointer-events: auto; opacity: 0; visibility: hidden;
+}
+.ctl {
+  padding: 6px 0; background: none; border: 0; border-bottom: 2px solid currentColor; cursor: pointer;
+  font: 700 18px var(--display); font-stretch: 85%; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.ctl:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.final__menu-slot {
+  position: absolute; top: 20px; right: 24px; padding: 8px 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.7); color: rgba(255, 255, 255, 0.85);
+  font: 500 13px var(--body); text-transform: uppercase; letter-spacing: 0.08em;
+  opacity: 0; visibility: hidden;
+}
+
+/* ------------------------------------------------------------------ mobile (93-map_1/2, 101_mobile) */
+@media (max-width: 700px) and (orientation: portrait) {
+  .chapter__inner { left: 6vw; right: 6vw; top: auto; bottom: 18vh; max-width: none; }
+  .chapter__title { font-size: 16vw; }
+  .chapter__text { font-size: 6.4vw; }
+  .chapter__number { font-size: 16vw; }
+
+  /* Horizontal pan only: the vertical gesture keeps scrolling the page */
+  .map__pan {
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y; scrollbar-width: none;
+  }
+  .map__pan::-webkit-scrollbar { display: none; }
+  .map__svg { position: relative; left: 0; height: 100%; }
+  .map__label { font-size: 17px; }
+
+  .map-card {
+    top: 7vh; left: 10vw; right: 6vw; width: auto;
+    padding: 12px 18px 16px; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s;
+  }
+  .map-card.is-open { opacity: 1; visibility: visible; }
+  .map-card__close {
+    display: block; position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 4px;
+    background: none; border: 0; cursor: pointer;
+  }
+  .map-card__close svg { width: 100%; height: 100%; fill: none; stroke: #fff; stroke-width: 2; }
+
+  .map-legend {
+    top: auto; bottom: 0; left: 0; right: 0; width: auto; border: 0;
+    padding: 0 20px; max-height: 64px; overflow: hidden; transition: max-height 0.35s ease;
+  }
+  .map-legend.is-open { max-height: 70vh; padding-bottom: 20px; }
+  .map-legend__toggle {
+    display: flex; justify-content: space-between; align-items: center; width: 100%;
+    height: 64px; padding: 0; background: none; border: 0; cursor: pointer; color: var(--black);
+    font: 700 17px var(--slab);
+  }
+  .map-legend__toggle svg { width: 24px; height: 14px; fill: none; stroke: var(--black); stroke-width: 1.5; transition: transform 0.3s; }
+  .map-legend.is-open .map-legend__toggle svg { transform: rotate(180deg); }
+  .map-legend__title { display: none; }
+
+  .hint { bottom: 84px; }
+
+  .final__sentence { left: 5.5vw; right: 5.5vw; top: 5vh; max-width: none; font-size: 18.2vw; line-height: 0.92; }
+  .final__controls { left: 5.5vw; right: 5.5vw; bottom: 8vh; gap: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint svg { animation: none; }
+}

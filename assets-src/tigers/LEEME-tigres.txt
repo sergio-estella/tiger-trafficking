@@ -1,0 +1,13 @@
+RECORTABLES DE TIGRES PARA ANIMACION
+
+Pose actual = pose neutra. Sin animaciones aplicadas.
+Cada SVG: body, head, jaw, front-leg-left, front-leg-right, hind-leg-left, hind-leg-right, tail-1, tail-2, tail-3. Patas completas.
+
+Izquierda/derecha del frontal se refieren a la pantalla. En perfil left = lado cercano y right = lejano.
+Cada pieza contiene trazados vectoriales, un recorte y, en articulaciones, un respaldo negro solapado. No hay imágenes incrustadas. Las piezas de cola se solapan entre 19 y 30 px; los respaldos de patas tienen radio 24 px.
+
+Pivotes: data-pivot y transform-origin en cada grupo, en coordenadas del viewBox. Tambien se incluyen en tigres-pivotes.json. La capa pivot-guides esta oculta; mostrarla para ver puntos cian. tail-1 es la base y tail-3 la punta.
+
+Los segmentos son grupos hermanos en el mismo sistema de coordenadas. Si se anima la cola como cadena, crear parentesco conservando transformaciones globales en el programa elegido. Al mover la cabeza, vincular tambien jaw.
+
+Las uniones ocultas se han reconstruido de forma aproximada desde las imágenes planas. Los solapes permiten ajustes moderados, no garantizan articulaciones sin huecos en cualquier angulo. Rotaciones extremas pueden necesitar retoque.

@@ -1,0 +1,126 @@
+{
+  "perfil": {
+    "tail-3": {
+      "pivot": [
+        170,
+        176
+      ]
+    },
+    "tail-2": {
+      "pivot": [
+        350,
+        289
+      ]
+    },
+    "tail-1": {
+      "pivot": [
+        475,
+        325
+      ]
+    },
+    "hind-leg-right": {
+      "pivot": [
+        480,
+        530
+      ]
+    },
+    "front-leg-right": {
+      "pivot": [
+        1235,
+        400
+      ]
+    },
+    "body": {
+      "pivot": [
+        845,
+        430
+      ]
+    },
+    "hind-leg-left": {
+      "pivot": [
+        500,
+        460
+      ]
+    },
+    "front-leg-left": {
+      "pivot": [
+        1140,
+        370
+      ]
+    },
+    "head": {
+      "pivot": [
+        1350,
+        295
+      ]
+    },
+    "jaw": {
+      "pivot": [
+        1500,
+        354
+      ]
+    }
+  },
+  "frontal": {
+    "tail-3": {
+      "pivot": [
+        831,
+        82
+      ]
+    },
+    "tail-2": {
+      "pivot": [
+        804,
+        143
+      ]
+    },
+    "tail-1": {
+      "pivot": [
+        796,
+        215
+      ]
+    },
+    "hind-leg-left": {
+      "pivot": [
+        508,
+        487
+      ]
+    },
+    "hind-leg-right": {
+      "pivot": [
+        1028,
+        487
+      ]
+    },
+    "body": {
+      "pivot": [
+        768,
+        460
+      ]
+    },
+    "front-leg-left": {
+      "pivot": [
+        574,
+        590
+      ]
+    },
+    "front-leg-right": {
+      "pivot": [
+        962,
+        590
+      ]
+    },
+    "head": {
+      "pivot": [
+        768,
+        474
+      ]
+    },
+    "jaw": {
+      "pivot": [
+        768,
+        526
+      ]
+    }
+  }
+}
