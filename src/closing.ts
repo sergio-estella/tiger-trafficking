@@ -18,13 +18,22 @@
  * - prefers-reduced-motion: fades only, no moving tigers.
  */
 import { gsap } from 'gsap';
-import { createFrontalTiger, createProfileTiger, type Tiger } from './tigers';
+// The tigers are drawn as images: their articulated rig (src/tigers.ts) is kept for later but no
+// longer animated, and an <img> is far cheaper to move and resize than a live SVG with clip paths.
+import frontalUrl from './assets/tigers/tigre-frontal-capas.svg?url';
+import profileUrl from './assets/tigers/tigre-perfil-capas.svg?url';
 
 const MAP_IN_VH = 0.9;     // the chapter text has scrolled out (92_C): the map fades in
 const MAP_HOLD_VH = 1.5;   // scroll length of the explorable map before the trigger
 const HYSTERESIS_PX = 90;  // upward scroll needed to start rewinding
 const REWIND_SPEED = 2;
-const STRIDES_PER_SEC = { frontal: 3.2, profile: 3.6 }; // a gallop, not a trot
+/**
+ * What scrolling back up past the trigger does:
+ * - 'cut'   (current): no tiger animation going backwards; the red fades away
+ *           in 0.35 s and the map is there again, as the reader left it.
+ * - 'video' (kept for later): the jump rewinds like a video at 2× speed.
+ */
+const REWIND_MODE: 'cut' | 'video' = 'cut';
 
 type State = 'map' | 'playing' | 'done' | 'rewinding';
 
@@ -47,8 +56,10 @@ export function createClosing(section: HTMLElement): ClosingApi {
   const chapterNumber = stage.querySelector<HTMLElement>('.chapter__number')!;
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const frontal: Tiger | null = reduced ? null : createFrontalTiger(frontalEl);
-  const profile: Tiger | null = reduced ? null : createProfileTiger(profileEl);
+  if (!reduced) {
+    frontalEl.innerHTML = `<img src="${frontalUrl}" alt="" draggable="false" />`;
+    profileEl.innerHTML = `<img src="${profileUrl}" alt="" draggable="false" />`;
+  }
 
   let state: State = 'map';
   let trigger = 0;
@@ -78,8 +89,6 @@ export function createClosing(section: HTMLElement): ClosingApi {
 
   // ------------------------------------------------------------- timeline
   let tl: gsap.core.Timeline | undefined;
-  let frontalWindow: [number, number] = [0, 0];
-  let profileWindow: [number, number] = [0, 0];
 
   function build() {
     const progress = tl ? tl.progress() : 0;
@@ -88,7 +97,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
     const t = (tl = gsap.timeline({
       paused: true,
       onComplete: () => { state = 'done'; },
-      onReverseComplete: () => { state = 'map'; showHintSoon(); },
+      onReverseComplete: () => { state = 'map'; updateMapEntry(); showHintSoon(); },
     }));
 
     if (reduced) {
@@ -115,20 +124,24 @@ export function createClosing(section: HTMLElement): ClosingApi {
     // burst grows (0–0.6 s) → holds still 1 s while the tiger appears inside it →
     // burst cut, tiger rushes to camera over red (→ 2.3 s) → 0.5 s of red →
     // profile tiger crosses in 1.6 s.
-    const T = { hold: 0.6, tigerIn: 0.7, burstOut: 1.6, f98: 1.85, f99: 2.1, out: 2.3 };
-    // Burst: top-left in frame px, scale relative to its 181×116 size (frame 94 = scale 1)
+    const T = { hold: 0.6, tigerIn: 0.7, burstOut: 1.6, f98: 1.85, f99: 2.1, out: 2.2 };
     const B = { f94: 0.25 };
     // Burst centred on the page: its red core (≈102, 50 in its 181×116 drawing) stays at frame (720, 450)
     const CORE = { x: 102, y: 50 };
     const at = (t: number, sc: number) => ({ t, s: sc, x: 720 - CORE.x * sc, y: 450 - CORE.y * sc });
-    const burstKeys = [at(0, 0.04), at(B.f94, 1), at(T.hold, 6.5), at(T.burstOut, 6.5)];
+    const HOLD_SCALE = 17;   // ~frames 95–96: the star fills most of the screen
+    const POUNCE_SCALE = 36; // ~frame 97: bigger behind the tiger as it pounces
+    const burstKeys = [
+      at(0, 0.04), at(B.f94, 3), at(T.hold, HOLD_SCALE), at(T.burstOut - 0.001, HOLD_SCALE),
+      at(T.burstOut, POUNCE_SCALE), at(T.f99, POUNCE_SCALE),
+    ];
     // Tiger: position of the face (artboard 768, 474) in frame px, scale of the 1536×1024 artboard
     const tigerKeys = [
       { t: T.tigerIn, s: 0.04, x: 720, y: 440 },  // born in the burst's red core
       { t: T.burstOut, s: 0.6, x: 720, y: 440 },  // grows inside the still burst
       { t: T.f98, s: 2.85, x: 718, y: 560 },      // then pounces at the reader
       { t: T.f99, s: 7.71, x: 716, y: 800 },
-      { t: T.out, s: 22.56, x: 715, y: 1257 },
+      { t: T.out, s: 11, x: 716, y: 960 },
     ];
     type Key = { t: number; s: number; x: number; y: number };
     const sample = (keys: Key[], time: number) => {
@@ -158,20 +171,24 @@ export function createClosing(section: HTMLElement): ClosingApi {
     // Debris that pops out of the burst: stars, shards and dots (frame-space origin = burst in 94)
     fxEl.innerHTML = '';
     const ORIGIN = { x: 720, y: 450 };
-    const debris = Array.from({ length: 16 }, (_, i) => {
+    const DEBRIS = 48;
+    const debris = Array.from({ length: DEBRIS }, (_, i) => {
       const kind = i % 3 === 0 ? 'dot' : i % 3 === 1 ? 'star' : 'shard';
       const node = document.createElement('span');
       node.className = `fx__${kind}`;
       fxEl.append(node);
-      const angle = (i / 16) * Math.PI * 2 + (i % 2 ? 0.25 : -0.15);
-      return { node, angle, delay: (3 + (i * 7) % 5) / FPS, speed: 700 + ((i * 37) % 9) * 160, size: 16 + ((i * 13) % 4) * 8, spin: (i % 2 ? 1 : -1) * (90 + (i % 4) * 40) };
+      const angle = (i / DEBRIS) * Math.PI * 2 * 3 + (i % 2 ? 0.25 : -0.15) + (i % 5) * 0.07;
+      return { node, angle, delay: (1 + (i * 7) % 6) / FPS, speed: 500 + ((i * 37) % 11) * 170, size: 10 + ((i * 13) % 5) * 7, spin: (i % 2 ? 1 : -1) * (90 + (i % 4) * 40) };
     });
 
     gsap.set(burstEl, { autoAlpha: 0 });
-    gsap.set(frontalEl, { width: 1536, height: 1024, left: 0, top: 0, transformOrigin: '0 0', autoAlpha: 0 });
+    gsap.set(frontalEl, { left: 0, top: 0, autoAlpha: 0 });
     const clock = { t: 0 };
+    let lastFrontal = -1;
     const renderFrontal = () => {
       const tq = held(clock.t);
+      if (tq === lastFrontal) return;
+      lastFrontal = tq;
       const n = Math.round(tq * FPS);
       // the burst boils only while it grows; once it reaches its size it is completely still
       const boil = tq < T.hold ? BOIL[n % BOIL.length] : BOIL[0];
@@ -192,7 +209,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
       }
       const g = sample(tigerKeys, tq);
       const sc = g.s * k;
-      gsap.set(frontalEl, { x: fx(g.x) - 768 * sc, y: fy(g.y) - 474 * sc, scale: sc, transformOrigin: '0 0' });
+      gsap.set(frontalEl, { x: fx(g.x) - 768 * sc, y: fy(g.y) - 474 * sc, width: 1536 * sc, height: 1024 * sc });
       // The pounce: everything shakes while the tiger comes at the reader, harder as it gets closer
       if (tq >= T.burstOut && tq < T.out) {
         const p = (tq - T.burstOut) / (T.out - T.burstOut);
@@ -209,10 +226,13 @@ export function createClosing(section: HTMLElement): ClosingApi {
       .to(clock, { t: T.out, duration: T.out, ease: 'none', onUpdate: renderFrontal }, 0)
       .set(burstEl, { autoAlpha: 1 }, 0)
       .set(fxEl, { autoAlpha: 1 }, 0)
+      // hide the map's content (not .map itself: its entry fade would overwrite this tween)
+      .set(map.children, { visibility: 'hidden' }, T.hold)
       .set(frontalEl, { autoAlpha: 1 }, T.tigerIn)
-      // hard cut: the burst goes, the tiger keeps coming over plain red
-      .set(cover, { autoAlpha: 1 }, T.burstOut)
-      .set([burstEl, fxEl], { autoAlpha: 0 }, T.burstOut)
+      .set(fxEl, { autoAlpha: 0 }, T.burstOut)
+      // the tiger's face fills the screen: hard cut to red
+      .set(cover, { autoAlpha: 1 }, T.f99)
+      .set(burstEl, { autoAlpha: 0 }, T.f99)
       .set(frontalEl, { autoAlpha: 0 }, T.out);
 
     // 100 · ~0.5 s of red, then 101–104 · the profile tiger leaps in on a parabola,
@@ -236,8 +256,11 @@ export function createClosing(section: HTMLElement): ClosingApi {
       y: l.y0 + (l.y1 - l.y0) * u - 4 * l.h * u * (1 - u),
     });
     const jumpClock = { t: 0 };
+    let lastProfile = -1;
     const renderProfile = () => {
       const tq = held(jumpClock.t);
+      if (tq === lastProfile) return;
+      lastProfile = tq;
       let pos: { x: number; y: number }; let tilt = 0;
       if (tq < JUMP) {
         const u = tq / JUMP, l = leaps[0];
@@ -261,26 +284,8 @@ export function createClosing(section: HTMLElement): ClosingApi {
       // 104 · controls ~0.3 s after the sentence is complete
       .to(controls, { autoAlpha: 1, duration: 0.3, ease: 'power1.out' }, PROFILE_START + PROFILE_DUR + 0.3);
 
-    // No run cycles: both tigers keep their drawn pose (frontal pounces, profile leaps)
-    frontalWindow = [-1, -1];
-    profileWindow = [-1, -1];
     t.progress(progress);
   }
-
-  // ------------------------------------------------------------- run cycles
-  let cycleAcc = 0;
-  gsap.ticker.add((_t, dtMs) => {
-    if (reduced || !tl || !tl.isActive()) return;
-    const dir = tl.reversed() ? -1 : 1;
-    const dt = (dtMs / 1000) * tl.timeScale() * dir;
-    const t = tl.time();
-    // Pose changes only once per drawing (12 per second), like the burst
-    cycleAcc += dt;
-    if (Math.abs(cycleAcc) < 1 / 12) return;
-    if (t >= frontalWindow[0] && t <= frontalWindow[1]) frontal!.step(cycleAcc * STRIDES_PER_SEC.frontal);
-    if (t >= profileWindow[0] && t <= profileWindow[1]) profile!.step(cycleAcc * STRIDES_PER_SEC.profile);
-    cycleAcc = 0;
-  });
 
   // ------------------------------------------------------------- trigger
   function measure() {
@@ -294,8 +299,16 @@ export function createClosing(section: HTMLElement): ClosingApi {
   }
 
   function rewind() {
-    state = 'rewinding';
-    tl!.timeScale(REWIND_SPEED).reverse();
+    if (REWIND_MODE === 'video') {
+      state = 'rewinding';
+      tl!.timeScale(REWIND_SPEED).reverse();
+      return;
+    }
+    state = 'map';
+    tl!.pause().progress(0);
+    gsap.fromTo(cover, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.35, ease: 'power1.out' });
+    updateMapEntry();
+    showHintSoon();
   }
 
   function onScroll() {
@@ -326,7 +339,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
       mapEntered = true;
       gsap.to(map, { autoAlpha: 1, duration: 0.5, ease: 'power1.out', overwrite: true, onComplete: () => showHintSoon(0) });
       gsap.to(chapterNumber, { autoAlpha: 0, duration: 0.5, overwrite: true });
-    } else if (mapEntered && state === 'map' && y < mapIn - HYSTERESIS_PX) {
+    } else if (mapEntered && (state === 'map' || state === 'rewinding') && y < mapIn - HYSTERESIS_PX) {
       mapEntered = false;
       gsap.to([map, hint], { autoAlpha: 0, duration: 0.3, overwrite: true });
       gsap.to(chapterNumber, { autoAlpha: 1, duration: 0.3, overwrite: true });

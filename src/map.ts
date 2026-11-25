@@ -24,6 +24,8 @@ const fmt = new Intl.NumberFormat('en-GB');
 export interface MapApi {
   /** Fired on any reader interaction (hint hides while the reader explores) */
   onInteract(cb: () => void): void;
+  /** Mobile: pan so the middle of the map is in view */
+  center(): void;
   /** Mobile: scroll the map horizontally so the given country is in view */
   reveal(id: string): void;
 }
@@ -177,6 +179,10 @@ export function createMap(root: HTMLElement): MapApi {
 
   return {
     onInteract(cb) { listeners.push(cb); },
+    center() {
+      const width = svg.getBoundingClientRect().width;
+      if (width > pan.clientWidth) setOffset(-(width - pan.clientWidth) / 2);
+    },
     reveal(id) {
       const c = byId.get(id);
       const width = svg.getBoundingClientRect().width;

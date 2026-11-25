@@ -10,9 +10,9 @@ Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
 | 92 → 92_C | El texto del capítulo sube y sale sobre el fondo rojo fijo; «07.» se queda | scroll | ~90 vh |
 | 92_D → 93 | El mapa aparece con un fundido de 0,5 s en su sitio; «07.» se va | ANIMATE | 0,5 s |
 | 93 | Mapa explorable (tierra negra, sin rayas), fijado durante ~150 vh de scroll | HOLD · EXPLORE | lo decide el lector |
-| 94–95 | El estallido nace centrado en la página y crece a saltos (~0,6 s) | ANIMATE | 0,6 s |
+| 94–95 | El estallido nace centrado en la página y crece a saltos hasta ocupar casi toda la pantalla (~0,6 s), soltando muchas estrellas, esquirlas y puntos | ANIMATE | 0,6 s |
 | 95 (quieto) | El estallido se queda completamente quieto 1 s; en su centro rojo aparece el tigre frontal y crece | ANIMATE | 1 s |
-| 96–99 | Corte: desaparece el estallido; el tigre se abalanza hacia el lector (sin mover las patas) y vibra toda la pantalla | ANIMATE | ~0,7 s |
+| 96–99 | El estallido salta a un tamaño aún mayor detrás del tigre, que se abalanza hacia el lector (sin mover las patas) mientras vibra toda la pantalla; cuando su cara llena la pantalla, corte a rojo | ANIMATE | ~0,6 s |
 | 100 | Pantalla roja | ANIMATE | 0,5 s |
 | 101–103 | El tigre de perfil entra de un salto en parábola, se posa en el centro y sale con otro salto; el cuerpo se inclina con la trayectoria; destapa la frase | ANIMATE | ~2,3 s |
 | 104 | Frase completa; ~0,3 s después, Play again · Share | HOLD · READ | — |
@@ -25,7 +25,7 @@ Tipografía de la frase: 82 px a 1440×900 (antes 100 px, −18 %), escala con e
 
 - Un único umbral al final del mapa lanza los ~3 s seguidos. La animación va por tiempo; el scroll no mueve fotogramas.
 - Scroll rápido hacia delante: escena fijada, la animación siempre termina y luego se libera. Sin bloqueo de scroll.
-- Hacia atrás: rebobinado como un vídeo (los tigres corren hacia atrás) al doble de velocidad (~3 s). Primero se van los controles y luego el tigre vuelve a tapar la frase.
+- Hacia atrás: sin animación de tigres. El rojo se desvanece en 0,35 s y vuelve el mapa tal como estaba. (El rebobinado tipo vídeo sigue en el código: `REWIND_MODE = 'video'` en `src/closing.ts`.)
 - Cambio de sentido a mitad: se invierte en el acto, con un margen de ~90 px de scroll para que no tartamudee.
 - Cada vez que se cruza el umbral hacia abajo, el salto se ve completo.
 - Al volver, el mapa conserva el país seleccionado, el encuadre y la tarjeta abierta.

@@ -10,6 +10,7 @@
   --sand: #d8d2c4;
   --note: #3b321c;
   --pale: #f7ffae;
+  --extinct-land: #f7ffae;
 
   /* Display face: free stand-in for Helvetica Neue Condensed Black */
   --display: 'Archivo Variable', 'Arial Narrow', sans-serif;
@@ -62,12 +63,12 @@ button { font: inherit; color: inherit; }
 
 .country--outside { fill: transparent; stroke: rgba(17, 17, 17, 0.55); stroke-width: 0.6; }
 .country--wild { fill: var(--black); }
-.country--extinct { fill: var(--extinct); }
+.country--extinct { fill: var(--extinct-land); }
 .map__range .country { stroke: var(--red); stroke-width: 0.5; cursor: pointer; outline: none; transition: fill 0.15s; }
 .map__range .country:hover,
 .map__range .country:focus-visible { fill: #2a2a2a; }
 .map__range .country--extinct:hover,
-.map__range .country--extinct:focus-visible { fill: #b8301a; }
+.map__range .country--extinct:focus-visible { fill: #e6ee8f; }
 .map__range .country.is-selected { stroke: var(--orange); stroke-width: 2.5; paint-order: stroke; }
 .map__range { /* draw the selected outline on top */ }
 
@@ -82,25 +83,26 @@ button { font: inherit; color: inherit; }
   pointer-events: none;
 }
 
-/* Country card (desktop: top right, as in frame 93) */
+/* Card + legend stacked on the right, from 30% of the height (frame 93), clear of the menu button */
+.map-panel { position: absolute; top: 29.9vh; right: 4.1vw; width: clamp(280px, 22.6vw, 360px); max-height: 70vh; overflow: auto; scrollbar-width: none; }
 .map-card {
-  position: absolute; top: 0; right: 4.1vw; width: clamp(280px, 22.6vw, 360px);
+  position: relative;
   padding: 14px 20px 18px; background: var(--black); color: #fff;
   font: 400 14px/1.45 var(--body);
 }
-.map-card__title { margin: 0; font: 400 42px/1.05 var(--card-title); color: var(--yellow); }
+.map-card__title { margin: 0; font: 400 42px/1.05 var(--card-title); color: var(--red); }
 .map-card__body p { margin: 0; }
 .map-card__wild { font-weight: 700; font-size: 15px; color: var(--lime); }
-.map-card hr { border: 0; border-top: 1px solid var(--yellow); margin: 8px 0; }
+.map-card hr { border: 0; border-top: 1px solid var(--pale); margin: 8px 0; }
 .map-card__period { font-size: 12px; color: var(--sand); margin-bottom: 6px !important; }
 .map-card__jailed { color: var(--teal); margin-top: 6px !important; }
 .map-card__pending { font-style: italic; color: var(--sand); opacity: 0.8; }
 .map-card__draft { margin-top: 10px !important; font-size: 11px; color: var(--sand); opacity: 0.7; }
 .map-card__close { display: none; }
 
-/* Legend (desktop: white box under the card) */
+/* Legend (desktop: white box right under the card) */
 .map-legend {
-  position: absolute; top: 30vh; right: 4.1vw; width: clamp(280px, 22.6vw, 360px);
+  position: relative;
   padding: 16px 20px; background: #fff; color: var(--black); border: 1px solid var(--black);
   font: 400 14px/1.4 var(--body);
 }
@@ -111,7 +113,7 @@ button { font: inherit; color: inherit; }
 .map-legend__note { margin: 12px 0 0; font-size: 12.5px; color: var(--note); }
 .sw { width: 36px; height: 21px; display: block; }
 .sw--wild { background: var(--black); }
-.sw--extinct { background: var(--extinct); }
+.sw--extinct { background: var(--extinct-land); border: 1px solid rgba(17, 17, 17, 0.35); }
 .sw--outside { background: var(--red); border: 1px solid rgba(17, 17, 17, 0.55); }
 .sw--circle, .sw--none { width: 21px; height: 21px; border-radius: 50%; justify-self: center; }
 .sw--circle { background: var(--green); }
@@ -120,10 +122,11 @@ button { font: inherit; color: inherit; }
 /* Scroll hint (frame 1 component) */
 .hint {
   position: absolute; left: 50%; bottom: 3vh; transform: translateX(-50%);
-  display: grid; justify-items: center; gap: 2px; color: var(--black); pointer-events: none;
+  display: grid; justify-items: center; gap: 2px; color: var(--pale); pointer-events: none;
+  /* pale, so it reads over both the black land and the red sea */
   font: 900 15px var(--display); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.02em;
 }
-.hint svg { width: 90px; height: auto; fill: none; stroke: var(--black); stroke-width: 1.5; animation: hint-bob 1.6s ease-in-out infinite; }
+.hint svg { width: 90px; height: auto; fill: none; stroke: var(--pale); stroke-width: 1.5; animation: hint-bob 1.6s ease-in-out infinite; }
 @keyframes hint-bob { 50% { transform: translateY(6px); } }
 
 /* ------------------------------------------------------------------ jump */
@@ -144,6 +147,7 @@ button { font: inherit; color: inherit; }
 .tiger--frontal { opacity: 0; visibility: hidden; }
 .tiger--profile { top: 0; left: 0; }
 .tiger-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.tiger img { display: block; width: 100%; height: 100%; user-select: none; }
 
 /* ------------------------------------------------------------------ 101 */
 .final { position: absolute; inset: 0; pointer-events: none; }
@@ -221,8 +225,9 @@ button { font: inherit; color: inherit; }
   .map__svg { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
   .map__label { font-size: 17px; }
 
+  .map-panel { display: contents; }
   .map-card {
-    top: 7vh; left: 10vw; right: 6vw; width: auto;
+    position: absolute; top: 7vh; left: 10vw; right: 6vw; width: auto;
     padding: 12px 18px 16px; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s;
   }
   .map-card.is-open { opacity: 1; visibility: visible; }
@@ -233,7 +238,7 @@ button { font: inherit; color: inherit; }
   .map-card__close svg { width: 100%; height: 100%; fill: none; stroke: #fff; stroke-width: 2; }
 
   .map-legend {
-    top: auto; bottom: 0; left: 0; right: 0; width: auto; border: 0;
+    position: absolute; top: auto; bottom: 0; left: 0; right: 0; width: auto; border: 0;
     padding: 0 20px; max-height: 64px; overflow: hidden; transition: max-height 0.35s ease;
   }
   .map-legend.is-open { max-height: 70vh; padding-bottom: 20px; }
@@ -248,7 +253,8 @@ button { font: inherit; color: inherit; }
 
   .hint { bottom: 84px; }
 
-  .final__content { left: 5.5vw; right: 5.5vw; top: max(5vh, 72px); bottom: 8vh; transform: none; justify-content: space-between; }
+  .final__content { left: 5.5vw; right: 5.5vw; top: 72px; bottom: 6vh; transform: none; justify-content: center; }
+  .final__controls { position: absolute; left: 0; right: 0; bottom: 0; }
   /* 66 px at 440 px wide (storyboard: 80 px, −18 %) */
   .final__sentence { max-width: none; font-size: min(15vw, 8vh); line-height: 0.92; }
   .final__controls { gap: 22px; }

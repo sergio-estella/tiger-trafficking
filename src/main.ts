@@ -13,8 +13,8 @@ const map = createMap(closingSection.querySelector<HTMLElement>('.map')!);
 const closing = createClosing(closingSection);
 map.onInteract(() => closing.notifyInteraction());
 
-// Mobile: start the horizontal pan with India in view, as in 93-map_1
-requestAnimationFrame(() => map.reveal('356'));
+// Mobile: start with the map centred, so countries on both sides stay in view
+requestAnimationFrame(() => map.center());
 
 // Menu (frame MENU): opens over everything; chapter links close it and jump
 const menu = document.querySelector<HTMLElement>('#menu')!;
