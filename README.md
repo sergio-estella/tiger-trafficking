@@ -25,6 +25,8 @@ npm run dev
 
 | Path | What |
 |---|---|
+| `src/content/chapters.ts` | Story order: chapter openers (copy, entrances/exits) and chart placeholders |
+| `src/story.ts` | Builds intro, openers and placeholders; stepped-scene engine (sticky stage, scroll thresholds → timeline labels) |
 | `src/closing.ts` | Trigger, timeline, rewind, hysteresis, reduced motion |
 | `src/tigers.ts` | Articulated tiger rigs and run cycles |
 | `src/map.ts` | Explorable map, country card, legend |

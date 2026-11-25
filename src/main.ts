@@ -6,9 +6,12 @@ import '@fontsource/anton/400.css';
 import './styles.css';
 
 import { createMap } from './map';
+import { buildStory } from './story';
 import { createClosing } from './closing';
 
 const closingSection = document.querySelector<HTMLElement>('#closing')!;
+// Intro, chapter openers and chart placeholders go before the closing (it measures its offset)
+buildStory(closingSection);
 const map = createMap(closingSection.querySelector<HTMLElement>('.map')!);
 const closing = createClosing(closingSection);
 map.onInteract(() => closing.notifyInteraction());
