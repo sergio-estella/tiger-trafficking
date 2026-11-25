@@ -48,7 +48,7 @@ Tipografía de la frase: 82 px a 1440×900 (antes 100 px, −18 %), escala con e
 - Referencia de móvil: los diseños están a 440 px; se prueba también a 360 y 390 px.
 - Menú: los enlaces de capítulo apuntan a anclas que aún no existen; «About the data», «Dashboard» y contacto pendientes.
 - El resto de la pieza.
-- Estilo de animación: pendiente de revisar las referencias en vídeo.
+- Estilo de animación: primera versión «cómic» según la referencia (vídeo, 1:19–1:20): 12 dibujos por segundo, formas que vibran, esquirlas y estrellas, cortes secos. Pendiente de valorar.
 
 ## Criterios para evaluar la primera prueba
 

@@ -129,6 +129,15 @@ button { font: inherit; color: inherit; }
 /* ------------------------------------------------------------------ jump */
 .burst { position: absolute; top: 0; left: 0; pointer-events: none; opacity: 0; visibility: hidden; }
 .burst svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.fx { position: absolute; inset: 0; pointer-events: none; opacity: 0; visibility: hidden; }
+.fx > span { position: absolute; top: 0; left: 0; display: block; visibility: hidden; }
+.fx__dot { border-radius: 50%; background: var(--black); transform-origin: 50% 50%; }
+.fx__star {
+  background: var(--pale); border: 0;
+  clip-path: polygon(50% 0, 62% 35%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 35%);
+  filter: drop-shadow(0 0 0 #000) drop-shadow(2px 2px 0 #000);
+}
+.fx__shard { background: var(--black); clip-path: polygon(0 50%, 100% 0, 70% 100%); }
 .red-cover { position: absolute; inset: 0; background: var(--red); opacity: 0; visibility: hidden; }
 /* no will-change: the browser would rasterise the vector once and blur it when scaled up */
 .tiger { position: absolute; pointer-events: none; }
@@ -195,6 +204,7 @@ button { font: inherit; color: inherit; }
 .menu__side { display: flex; flex-direction: column; align-items: flex-start; gap: 0.6em; font-size: clamp(26px, min(3.5vw, 5.5vh), 50px); }
 .menu__about, .menu__dashboard { font-family: var(--display); font-weight: 900; font-stretch: 75%; text-transform: uppercase; }
 .menu__dashboard { background: var(--pale); color: var(--black) !important; padding: 0 0.15em; }
+.menu__tiger { position: absolute; right: 1.5vw; bottom: 11vh; width: clamp(110px, 16vw, 235px); height: auto; pointer-events: none; }
 .menu__contact { margin-top: auto; font: 400 clamp(14px, 2vw, 30px) var(--display); }
 
 /* ------------------------------------------------------------------ mobile (93-map_1/2, 101_mobile) */
@@ -247,6 +257,7 @@ button { font: inherit; color: inherit; }
 @media (max-width: 700px) and (orientation: portrait) {
   .menu { grid-template-columns: 1fr; align-content: start; padding: 90px 7vw 7vh; gap: 40px; }
   .menu__contact { margin-top: 12px; }
+  .menu__tiger { width: 110px; bottom: 4vh; right: 4vw; }
   .menu-btn, .menu-close { width: 100px; height: 50px; }
   .menu-btn__label { top: 11px; font-size: 13px; }
 }
