@@ -16,6 +16,7 @@
 import { gsap } from 'gsap';
 import { createFrontalTiger, createProfileTiger, type Tiger } from './tigers';
 
+const MAP_IN_VH = 0.9;     // the chapter text has scrolled out (92_C): the map fades in
 const MAP_HOLD_VH = 1.5;   // scroll length of the explorable map before the trigger
 const HYSTERESIS_PX = 90;  // upward scroll needed to start rewinding
 const REWIND_SPEED = 2;
@@ -37,7 +38,8 @@ export function createClosing(section: HTMLElement): ClosingApi {
   const burstEl = stage.querySelector<HTMLElement>('.burst')!;
   const profileEl = stage.querySelector<HTMLElement>('.tiger--profile')!;
   const sentence = stage.querySelector<HTMLElement>('.final__sentence')!;
-  const controls = stage.querySelectorAll<HTMLElement>('.final__controls, .final__menu-slot');
+  const controls = stage.querySelectorAll<HTMLElement>('.final__controls');
+  const chapterNumber = stage.querySelector<HTMLElement>('.chapter__number')!;
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const frontal: Tiger | null = reduced ? null : createFrontalTiger(frontalEl);
@@ -45,6 +47,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
 
   let state: State = 'map';
   let trigger = 0;
+  let mapIn = 0;
   const vw = () => window.innerWidth;
   const vh = () => window.innerHeight;
 
@@ -102,24 +105,25 @@ export function createClosing(section: HTMLElement): ClosingApi {
 
     // 94–99 · burst + frontal tiger. Keyframes measured in Figma (frames 94–99).
     // Scale is interpolated in log space: constant-speed zoom, like a real approach.
-    const T = { f94: 0.12, f95: 0.3, f96: 0.55, f97: 0.8, f98: 1.0, f99: 1.2 };
+    const T = { f94: 0.12, f95: 0.28, f96: 0.45, f97: 0.7, f98: 0.92, f99: 1.1, out: 1.25 };
     // Burst (Group 273/274): top-left in frame px, scale relative to its 181×116 size
     const burstKeys = [
       { t: 0, s: 0.05, x: 625, y: 500 },
       { t: T.f94, s: 1, x: 543, y: 454 },
-      { t: T.f95, s: 9.5, x: -367, y: 21 },
+      { t: T.f95, s: 15.5, x: -913, y: -287 },
       { t: T.f96, s: 19.4, x: -1390, y: -454 },
       { t: T.f97, s: 35.8, x: -3197, y: -1331 },
       { t: T.f98, s: 63.4, x: -6109, y: -2650 },
     ];
     // Tiger (Group 275): position of the face (artboard 768, 474) in frame px, scale of the 1536×1024 artboard
+    // Tiger appears in 96 and passes the camera after 99 (continues to 'out' while it fades)
     const tigerKeys = [
-      { t: T.f94, s: 0.02, x: 716, y: 434 },
-      { t: T.f95, s: 0.053, x: 716, y: 434 },
-      { t: T.f96, s: 1.0, x: 694, y: 414 },
-      { t: T.f97, s: 2.85, x: 715, y: 588 },
-      { t: T.f98, s: 7.71, x: 715, y: 826 },
-      { t: T.f99, s: 22.56, x: 715, y: 1257 },
+      { t: T.f95, s: 0.02, x: 720, y: 449 },
+      { t: T.f96, s: 0.053, x: 720, y: 449 },
+      { t: T.f97, s: 1.0, x: 694, y: 414 },
+      { t: T.f98, s: 2.85, x: 715, y: 588 },
+      { t: T.f99, s: 7.71, x: 715, y: 826 },
+      { t: T.out, s: 22.56, x: 715, y: 1257 },
     ];
     type Key = { t: number; s: number; x: number; y: number };
     const sample = (keys: Key[], time: number) => {
@@ -148,16 +152,16 @@ export function createClosing(section: HTMLElement): ClosingApi {
     renderFrontal();
 
     t.to(hint, { autoAlpha: 0, duration: 0.15 }, 0)
-      .to(clock, { t: T.f99, duration: T.f99, ease: 'none', onUpdate: renderFrontal }, 0)
+      .to(clock, { t: T.out, duration: T.out, ease: 'none', onUpdate: renderFrontal }, 0)
       .to(burstEl, { autoAlpha: 1, duration: 0.06, ease: 'none' }, 0)
-      .to(frontalEl, { autoAlpha: 1, duration: 0.08, ease: 'none' }, T.f94)
+      .to(frontalEl, { autoAlpha: 1, duration: 0.06, ease: 'none' }, T.f95)
       // 99 → 100: the tiger passes the camera; red goes in under it, then it fades
-      .fromTo(cover, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15, ease: 'none' }, T.f98)
-      .to(burstEl, { autoAlpha: 0, duration: 0.01 }, T.f98 + 0.15)
-      .to(frontalEl, { autoAlpha: 0, duration: 0.08, ease: 'none' }, T.f99);
+      .fromTo(cover, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.12, ease: 'none' }, T.f99 - 0.05)
+      .to(burstEl, { autoAlpha: 0, duration: 0.01 }, T.f99 + 0.08)
+      .to(frontalEl, { autoAlpha: 0, duration: 0.1, ease: 'none' }, T.f99 + 0.05);
 
     // 101–104 · profile tiger gallops left → right in 1 s, uncovers the sentence and leaves the screen
-    const PROFILE_START = 1.45;
+    const PROFILE_START = 1.5;
     const g = profileGeometry();
     gsap.set(profileEl, { width: g.width, height: g.height, top: g.top, left: 0, x: -g.width, autoAlpha: 1 });
     revealSentence(-Infinity);
@@ -171,7 +175,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
       // 104 · controls ~0.3 s after the sentence is complete
       .to(controls, { autoAlpha: 1, duration: 0.3, ease: 'power1.out' }, PROFILE_START + 1.3);
 
-    frontalWindow = [0, T.f99 + 0.1];
+    frontalWindow = [0, T.out + 0.05];
     profileWindow = [PROFILE_START - 0.05, PROFILE_START + 1.05];
     t.progress(progress);
   }
@@ -188,7 +192,8 @@ export function createClosing(section: HTMLElement): ClosingApi {
 
   // ------------------------------------------------------------- trigger
   function measure() {
-    trigger = section.offsetTop + vh() * MAP_HOLD_VH;
+    mapIn = section.offsetTop + vh() * MAP_IN_VH;
+    trigger = mapIn + vh() * MAP_HOLD_VH;
   }
 
   function play() {
@@ -202,6 +207,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
   }
 
   function onScroll() {
+    updateMapEntry();
     const y = window.scrollY;
     if (y >= trigger && (state === 'map' || state === 'rewinding')) play();
     else if (y < trigger - HYSTERESIS_PX && (state === 'playing' || state === 'done')) rewind();
@@ -218,19 +224,22 @@ export function createClosing(section: HTMLElement): ClosingApi {
     }, delay);
   }
 
-  // Map entry: the stage slides up with the scroll and the map fades in over 0.5 s.
-  // Going back above the map re-arms the fade for the next entry.
+  // 92 → 93: the chapter text scrolls out over the pinned red stage (92_B, 92_C);
+  // then the map fades in over 0.5 s and "07." fades out (92_D → 93). Scrolling
+  // back above that point fades the map out again.
   gsap.set([map, hint], { autoAlpha: 0 });
-  const io = new IntersectionObserver(([e]) => {
-    if (e.isIntersecting && !mapEntered) {
+  function updateMapEntry() {
+    const y = window.scrollY;
+    if (!mapEntered && y >= mapIn) {
       mapEntered = true;
       gsap.to(map, { autoAlpha: 1, duration: 0.5, ease: 'power1.out', overwrite: true, onComplete: () => showHintSoon(0) });
-    } else if (!e.isIntersecting && mapEntered && state === 'map' && e.boundingClientRect.top > 0) {
+      gsap.to(chapterNumber, { autoAlpha: 0, duration: 0.5, overwrite: true });
+    } else if (mapEntered && state === 'map' && y < mapIn - HYSTERESIS_PX) {
       mapEntered = false;
-      gsap.set([map, hint], { autoAlpha: 0, overwrite: true });
+      gsap.to([map, hint], { autoAlpha: 0, duration: 0.3, overwrite: true });
+      gsap.to(chapterNumber, { autoAlpha: 1, duration: 0.3, overwrite: true });
     }
-  }, { threshold: 0.12 });
-  io.observe(stage);
+  }
 
   // ------------------------------------------------------------- init
   build();
@@ -239,6 +248,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
   if (window.scrollY >= trigger) {
     mapEntered = true;
     gsap.set(map, { autoAlpha: 1 });
+    gsap.set(chapterNumber, { autoAlpha: 0 });
     tl!.progress(1);
     state = 'done';
   }
@@ -251,14 +261,16 @@ export function createClosing(section: HTMLElement): ClosingApi {
   });
 
   // Controls (placeholders until the 101 UI is designed)
-  stage.querySelector('[data-action="top"]')!.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }));
+  // 104 · Play again replays the jump from the burst; Share uses the native sheet or copies the link
+  stage.querySelector('[data-action="replay"]')!.addEventListener('click', () => {
+    if (!tl) return;
+    state = 'playing';
+    tl.timeScale(1).progress(0).play();
+  });
   stage.querySelector('[data-action="share"]')!.addEventListener('click', async () => {
-    const data = { title: document.title, url: location.href };
+    const data = { title: 'Tiger Trafficking', url: location.href };
     if (navigator.share) await navigator.share(data).catch(() => {});
     else await navigator.clipboard?.writeText(location.href);
-  });
-  stage.querySelector('[data-action="credits"]')!.addEventListener('click', (e) => {
-    (e.currentTarget as HTMLElement).textContent = 'Credits (to be designed)';
   });
 
   return {

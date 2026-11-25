@@ -2,19 +2,19 @@
  * Explorable map (frame 93 · HOLD · EXPLORE).
  *
  * Country shapes come from Natural Earth (world-atlas, public domain) instead
- * of the Figma export, where land, stripes and extinct countries are one
- * bitmap and cannot be made interactive.
+ * of the Figma export, where land and extinct countries are one bitmap and
+ * cannot be made interactive. Land is plain black (no stripe decoration).
  *
  * Interaction never advances the story: selecting a country only updates the
- * card. On mobile the map pans horizontally only (native overflow-x), so the
- * vertical gesture always scrolls the page.
+ * card. On mobile the map pans horizontally only (JS drag, touch-action: pan-y),
+ * so the vertical gesture always scrolls the page.
  */
 import { geoMercator, geoPath, type GeoPermissibleObjects } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 // Natural Earth 1:50m, clipped to the region and quantised (see scripts/build-map-data.mjs)
 import mapData from './data/map-countries.json';
-import { byId, countries, DEFAULT_COUNTRY, VERIFIED, type Country } from './data/countries';
+import { byId, countries, DEFAULT_COUNTRY, markerDiameter, type Country } from './data/countries';
 
 const W = 1000;
 const H = 900;
@@ -51,17 +51,11 @@ export function createMap(root: HTMLElement): MapApi {
   const path = geoPath(projection);
 
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'map__svg', role: 'group', 'aria-label': 'Map of tiger range countries' });
-  const defs = el('defs');
-  const landClip = el('clipPath', { id: 'range-land' });
-  defs.append(landClip);
-  svg.append(defs);
-
   const gOutside = el('g', { class: 'map__outside' });
   const gRange = el('g', { class: 'map__range' });
-  const gStripes = el('g', { class: 'map__stripes', 'clip-path': 'url(#range-land)', 'aria-hidden': 'true' });
   const gMarkers = el('g', { class: 'map__markers', 'aria-hidden': 'true' });
   const gLabels = el('g', { class: 'map__labels', 'aria-hidden': 'true' });
-  svg.append(gOutside, gRange, gStripes, gMarkers, gLabels);
+  svg.append(gOutside, gRange, gMarkers, gLabels);
 
   const shapes = new Map<string, SVGPathElement>();
   for (const f of all) {
@@ -76,24 +70,15 @@ export function createMap(root: HTMLElement): MapApi {
       });
       gRange.append(p);
       shapes.set(id, p);
-      landClip.append(el('path', { d }));
     } else {
       gOutside.append(el('path', { d, class: 'country country--outside' }));
     }
   }
 
-  // Decorative stripes inside the land (placeholder for the Figma decoration:
-  // "The tiger inside the land is decoration."). Zigzag band across India–China.
-  const zig: Array<[number, number]> = [];
-  for (let lon = 66, i = 0; lon <= 124; lon += 4.2, i++) zig.push([lon, i % 2 ? 22 : 33]);
-  const zigD = 'M' + zig.map((ll) => projection(ll)!.map((v) => v.toFixed(1)).join(',')).join('L');
-  gStripes.append(el('path', { d: zigD, class: 'map__stripe' }));
-
   // Markers and labels
-  const k = W / 1000; // marker sizes are px at the storyboard scale, map ~1000 px wide there
   for (const c of countries) {
     const [x, y] = projection(c.marker)!;
-    const r = (c.markerSize / 2) * k;
+    const r = markerDiameter(c.wildTigers) / 2; // map is ~1000 px wide, as in the storyboard
     if (c.status === 'wild') {
       gMarkers.append(el('circle', { cx: x, cy: y, r, class: 'marker marker--wild', 'data-id': c.id }));
     } else {
@@ -111,23 +96,22 @@ export function createMap(root: HTMLElement): MapApi {
   pan.append(svg);
 
   // --- Card -----------------------------------------------------------------
-  const pending = '<span class="map-card__pending">pending</span>';
-  const n = (v: number | null) => (v == null ? pending : fmt.format(v));
+  const n = (v: number | null) => (v == null ? '—' : fmt.format(v));
 
   function renderCard(c: Country) {
     const wild = c.status === 'extinct'
       ? 'No wild tigers left (2023)'
-      : `${n(c.wildTigers2023)} wild tigers (2023)`;
+      : `${c.wildTigersQualifier === '>' ? 'More than ' : ''}${n(c.wildTigers)} wild tigers (2023)`;
+    const seized = c.minTigersSeized2000to2025 == null ? '' : ` · at least ${n(c.minTigersSeized2000to2025)} tigers seized`;
     const whole = c.pctWhole2020to2025 == null ? '' : ` · ${c.pctWhole2020to2025}% with whole animals`;
     card.querySelector('.map-card__title')!.textContent = c.name.toUpperCase();
     card.querySelector('.map-card__body')!.innerHTML = `
       <p class="map-card__wild">${wild}</p>
       <hr />
-      <p>${n(c.seizures2000to2025)} seizures · ${n(c.tigersSeized2000to2025)} tigers seized</p>
+      <p>${n(c.seizures2000to2025)} seizures${seized}</p>
       <p class="map-card__period">2000 – June 2025</p>
       <p>${n(c.seizures2020to2025)} seizures in 2020–25${whole}</p>
-      <p class="map-card__jailed">${n(c.peopleJailed2000to2021)} people jailed, 2000–2021</p>
-      ${VERIFIED ? '' : '<p class="map-card__draft">Prototype · figures pending verification</p>'}`;
+      <p class="map-card__jailed">${n(c.peopleJailed2000to2022)} people jailed, 2000 – June 2022</p>`;
   }
 
   function select(id: string, { open = true } = {}) {
@@ -156,7 +140,38 @@ export function createMap(root: HTMLElement): MapApi {
     interacted();
   });
 
-  pan.addEventListener('scroll', interacted, { passive: true });
+  // --- Horizontal pan (mobile) -----------------------------------------------
+  // touch-action: pan-y gives vertical swipes to the browser (page scroll) and
+  // horizontal ones to us. Drag moves the map; no inertia, clamped to its edges.
+  let offset = 0;
+  const setOffset = (v: number) => {
+    const max = Math.max(0, svg.getBoundingClientRect().width - pan.clientWidth);
+    offset = Math.min(0, Math.max(-max, v));
+    svg.style.transform = `translateX(${offset}px)`;
+  };
+  let drag: { id: number; x: number; start: number; moved: boolean } | null = null;
+  pan.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    drag = { id: e.pointerId, x: e.clientX, start: offset, moved: false };
+  });
+  pan.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) < 6) return;
+    if (!drag.moved) { drag.moved = true; interacted(); }
+    setOffset(drag.start + dx);
+  });
+  let justDragged = false;
+  const end = () => {
+    justDragged = !!drag?.moved;
+    drag = null;
+    setTimeout(() => { justDragged = false; }, 0);
+  };
+  pan.addEventListener('pointerup', end);
+  pan.addEventListener('pointercancel', end); // the browser took the gesture for vertical scroll
+  // A drag must not also select the country under the finger
+  pan.addEventListener('click', (e) => { if (justDragged) e.stopPropagation(); }, true);
+  window.addEventListener('resize', () => setOffset(offset));
 
   select(DEFAULT_COUNTRY);
 
@@ -164,10 +179,10 @@ export function createMap(root: HTMLElement): MapApi {
     onInteract(cb) { listeners.push(cb); },
     reveal(id) {
       const c = byId.get(id);
-      if (!c || pan.scrollWidth <= pan.clientWidth) return;
+      const width = svg.getBoundingClientRect().width;
+      if (!c || width <= pan.clientWidth) return;
       const [x] = projection(c.marker)!;
-      const px = (x / W) * pan.scrollWidth;
-      pan.scrollLeft = Math.max(0, px - pan.clientWidth * 0.35);
+      setOffset(-((x / W) * width - pan.clientWidth * 0.35));
     },
   };
 }

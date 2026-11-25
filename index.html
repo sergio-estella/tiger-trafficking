@@ -12,21 +12,40 @@
       Prototype · closing sequence (frames 92–104) · figures pending verification
     </div>
 
-    <!-- Frame 92 · lead-in to the map (HOLD · READ) -->
-    <section class="chapter" aria-labelledby="ch07-title">
-      <div class="chapter__inner">
-        <h2 id="ch07-title" class="display chapter__title">Tigers extinct</h2>
-        <p class="chapter__text">
-          Wild tigers once lived in <strong>Cambodia, Laos and Vietnam</strong>. They have disappeared from all
-          three. Elsewhere in Asia, they survive in parts of their former range.
-        </p>
+    <!-- Menu (frame MENU) -->
+    <button class="menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu">
+      <svg viewBox="0 0 134 67" aria-hidden="true"><path d="M67 67L0 0H134L67 67Z" /></svg>
+      <span class="menu-btn__label">Menu</span>
+    </button>
+    <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+      <nav class="menu__chapters" aria-label="Chapters">
+        <ol>
+          <li><a href="#ch00"><span class="menu__num">00.</span> Intro</a></li>
+          <li><a href="#ch01"><span class="menu__num">01.</span> Tiger Trafficking</a></li>
+          <li><a href="#ch02"><span class="menu__num">02.</span> Sold in Pieces</a></li>
+          <li><a href="#ch03"><span class="menu__num">03.</span> How Many Tigers?</a></li>
+          <li><a href="#ch04"><span class="menu__num">04.</span> What Is Trafficked</a></li>
+          <li><a href="#ch05"><span class="menu__num">05.</span> Who Went to Prison?</a></li>
+          <li><a href="#ch06"><span class="menu__num">06.</span> Seizures Recorded</a></li>
+          <li><a href="#ch07"><span class="menu__num">07.</span> People Jailed</a></li>
+          <li><a href="#ch08"><span class="menu__num">08.</span> Where Tigers Still Live</a></li>
+        </ol>
+      </nav>
+      <div class="menu__side">
+        <a class="menu__about" href="#about">About the data</a>
+        <a class="menu__dashboard" href="#dashboard">Dashboard</a>
+        <a class="menu__contact" href="#contact">Contact</a>
       </div>
-      <span class="chapter__number" aria-hidden="true">07.</span>
-    </section>
+      <button class="menu-close" type="button" aria-label="Close menu">
+        <svg viewBox="0 0 134 67" aria-hidden="true"><path d="M67 67L0 0H134L67 67Z" /></svg>
+        <span class="menu-btn__label">Close</span>
+      </button>
+    </div>
 
-    <!-- Frames 93–101 · closing -->
+    <!-- Frames 92–104 · chapter 07 lead-in + closing -->
     <section class="closing" id="closing" aria-label="Closing">
       <div class="stage">
+        <span class="chapter__number" aria-hidden="true">07.</span>
         <!-- 93 · HOLD · EXPLORE -->
         <div class="map" data-layer="map">
           <div class="map__pan" tabindex="-1"></div>
@@ -53,7 +72,6 @@
               <li><span class="sw sw--none"></span>No wild tigers left (2023)</li>
             </ul>
             <p class="map-legend__note">
-              The tiger inside the land is decoration.<br />
               Country figures in the card: seizures January 2000 – June 2025 (TRAFFIC).
             </p>
           </aside>
@@ -76,16 +94,31 @@
           <div class="final__content">
           <p class="final__sentence display">A tiger should never die for someone else’s profit.</p>
           <nav class="final__controls" aria-label="Story actions">
-            <button type="button" class="ctl" data-action="share">Share</button>
-            <button type="button" class="ctl" data-action="credits">Credits</button>
-            <button type="button" class="ctl" data-action="top">Back to top</button>
+            <button type="button" class="ctl" data-action="replay">
+              <svg viewBox="0 0 29 29" aria-hidden="true"><path d="M10 2.5L2.5 10L10 17.5M2.5 10H18.25C19.3334 10 20.4062 10.2134 21.4071 10.628C22.4081 11.0426 23.3175 11.6503 24.0836 12.4164C24.8497 13.1825 25.4574 14.0919 25.872 15.0929C26.2866 16.0938 26.5 17.1666 26.5 18.25C26.5 19.3334 26.2866 20.4062 25.872 21.4071C25.4574 22.4081 24.8497 23.3175 24.0836 24.0836C23.3175 24.8497 22.4081 25.4574 21.4071 25.872C20.4062 26.2866 19.3334 26.5 18.25 26.5H13" /></svg>
+              Play again
+            </button>
+            <button type="button" class="ctl" data-action="share">
+              <svg viewBox="0 0 31 33" aria-hidden="true"><path d="M10.5744 18.614L20.44 24.186M20.4256 8.814L10.5744 14.386M28.5 6.7C28.5 9.0196 26.5599 10.9 24.1667 10.9C21.7734 10.9 19.8333 9.0196 19.8333 6.7C19.8333 4.3804 21.7734 2.5 24.1667 2.5C26.5599 2.5 28.5 4.3804 28.5 6.7ZM11.1667 16.5C11.1667 18.8196 9.22657 20.7 6.83333 20.7C4.4401 20.7 2.5 18.8196 2.5 16.5C2.5 14.1804 4.4401 12.3 6.83333 12.3C9.22657 12.3 11.1667 14.1804 11.1667 16.5ZM28.5 26.3C28.5 28.6196 26.5599 30.5 24.1667 30.5C21.7734 30.5 19.8333 28.6196 19.8333 26.3C19.8333 23.9804 21.7734 22.1 24.1667 22.1C26.5599 22.1 28.5 23.9804 28.5 26.3Z" /></svg>
+              Share
+            </button>
           </nav>
           </div>
-          <div class="final__menu-slot" aria-hidden="true">Menu</div>
         </div>
 
         <!-- 101–103 · profile tiger galloping across, uncovers the sentence -->
         <div class="tiger tiger--profile" aria-hidden="true"></div>
+      </div>
+
+      <!-- 92 → 92_C · the chapter text scrolls up and out over the pinned red stage -->
+      <div class="chapter" id="ch07" aria-labelledby="ch07-title">
+        <div class="chapter__inner">
+          <h2 id="ch07-title" class="display chapter__title">Tigers extinct</h2>
+          <p class="chapter__text">
+            Wild tigers once lived in <strong>Cambodia, Laos and Vietnam</strong>. They have disappeared from all
+            three. Elsewhere in Asia, they survive in parts of their former range.
+          </p>
+        </div>
       </div>
     </section>
 

@@ -1,4 +1,4 @@
-# Brief · Cierre (frames 93–104)
+# Brief · Cierre (frames 92–104)
 
 Acuerdos de la entrevista de diseño previa a la primera prueba en navegador.
 Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
@@ -7,11 +7,13 @@ Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
 
 | Frames | Qué pasa | Estado | Duración |
 |---|---|---|---|
-| 93 | Mapa explorable, fijado durante ~150 vh de scroll. Entra subiendo con el scroll y con un fundido de 0,5 s | HOLD · EXPLORE | lo decide el lector |
+| 92 → 92_C | El texto del capítulo sube y sale sobre el fondo rojo fijo; «07.» se queda | scroll | ~90 vh |
+| 92_D → 93 | El mapa aparece con un fundido de 0,5 s en su sitio; «07.» se va | ANIMATE | 0,5 s |
+| 93 | Mapa explorable (tierra negra, sin rayas), fijado durante ~150 vh de scroll | HOLD · EXPLORE | lo decide el lector |
 | 94–99 | Estallido (estrella negro / amarillo / rojo) y tigre frontal que atraviesa la cámara; en 99 casi solo queda rojo | ANIMATE | ~1,2 s |
 | 100 | Pantalla roja | ANIMATE | ~0,25 s |
 | 101–103 | El tigre de perfil cruza al galope y destapa la frase; sale de la pantalla | ANIMATE | 1 s |
-| 104 | Frase completa; ~0,3 s después, compartir · créditos · volver al inicio (+ menú, sin diseñar) | HOLD · READ | — |
+| 104 | Frase completa; ~0,3 s después, Play again · Share | HOLD · READ | — |
 
 Total: ~3 s (rebobinado al doble: ~1,5 s).
 
@@ -42,11 +44,11 @@ Tipografía de la frase: 82 px a 1440×900 (antes 100 px, −18 %), escala con e
 
 ## Pendiente
 
-- **Cifras sin contrastar con las fuentes originales** (`src/data/countries.ts`, `VERIFIED = false`).
+- Cifras: `src/data/tiger-map-countries.csv`. Personas encarceladas: TRAFFIC 2000 – junio 2022 (la columna del storyboard 2000–2021 no tiene fuente primaria).
 - Referencia de móvil: los diseños están a 440 px; se prueba también a 360 y 390 px.
-- Menú y controles del 101 sin diseñar (marcadores de posición).
-- Entrada al mapa (92 → 93) y el resto de la pieza.
-- Decoración de rayas dentro del mapa: aproximada; falta el SVG original.
+- Menú: los enlaces de capítulo apuntan a anclas que aún no existen; «About the data», «Dashboard» y contacto pendientes.
+- El resto de la pieza.
+- Estilo de animación: pendiente de revisar las referencias en vídeo.
 
 ## Criterios para evaluar la primera prueba
 

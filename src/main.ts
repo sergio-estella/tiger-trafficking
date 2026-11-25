@@ -15,3 +15,13 @@ map.onInteract(() => closing.notifyInteraction());
 
 // Mobile: start the horizontal pan with India in view, as in 93-map_1
 requestAnimationFrame(() => map.reveal('356'));
+
+// Menu (frame MENU): opens over everything; chapter links close it and jump
+const menu = document.querySelector<HTMLElement>('#menu')!;
+const menuBtn = document.querySelector<HTMLButtonElement>('.menu-btn')!;
+const openMenu = () => { menu.hidden = false; menu.querySelector<HTMLElement>('a')?.focus(); document.body.style.overflow = 'hidden'; };
+const closeMenu = () => { menu.hidden = true; document.body.style.overflow = ''; menuBtn.focus(); };
+menuBtn.addEventListener('click', openMenu);
+menu.querySelector('.menu-close')!.addEventListener('click', closeMenu);
+menu.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+menu.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', closeMenu));
