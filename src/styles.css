@@ -248,7 +248,7 @@ button { font: inherit; color: inherit; }
 
   .hint { bottom: 84px; }
 
-  .final__content { left: 5.5vw; right: 5.5vw; top: 5vh; bottom: 8vh; transform: none; justify-content: space-between; }
+  .final__content { left: 5.5vw; right: 5.5vw; top: max(5vh, 72px); bottom: 8vh; transform: none; justify-content: space-between; }
   /* 66 px at 440 px wide (storyboard: 80 px, −18 %) */
   .final__sentence { max-width: none; font-size: min(15vw, 8vh); line-height: 0.92; }
   .final__controls { gap: 22px; }

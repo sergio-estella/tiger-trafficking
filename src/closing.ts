@@ -2,10 +2,11 @@
  * Closing sequence (storyboard frames 93–104). Agreed behaviour:
  *
  * - One trigger at the end of the map hold (~150vh) plays the whole jump on a
- *   clock (~4.7 s): burst grows and holds still 1 s while the tiger appears
- *   inside it; the tiger rushes through the camera (94–99, ~2.3 s); 0.5 s of red
- *   (100); profile tiger gallops across and uncovers the sentence (101–104,
- *   1.6 s); controls ~0.3 s later.
+ *   clock (~5.4 s): burst grows centred on the page and holds completely still
+ *   1 s while the tiger appears in its red core; the tiger pounces at the reader
+ *   while everything shakes (94–99, ~2.3 s); 0.5 s of red (100); the profile
+ *   tiger leaps in on a parabola, lands in the centre and leaps out, uncovering
+ *   the sentence (101–104, ~2.3 s); controls ~0.3 s later.
  * - Comic timing (reference video): 12 drawings per second, boiling shapes,
  *   debris popping out of the burst, hard cuts.
  * - Scroll does not scrub frames. The stage is sticky; fast scrolling never
@@ -65,7 +66,8 @@ export function createClosing(section: HTMLElement): ClosingApi {
 
   function profileGeometry() {
     const portrait = vh() > vw();
-    const width = portrait ? vw() * 1.7 : vw() * 1.23; // storyboard: 1774 px tiger on a 1440 px frame
+    // smaller than the storyboard (1774 px on 1440) so it reads as landing in the centre of the screen
+    const width = portrait ? vw() * 1.3 : vw() * 0.92;
     const height = width * (887 / 1774);
     // stage-relative: the stage may not be pinned yet when this runs
     const s = sentence.getBoundingClientRect();
@@ -116,19 +118,16 @@ export function createClosing(section: HTMLElement): ClosingApi {
     const T = { hold: 0.6, tigerIn: 0.7, burstOut: 1.6, f98: 1.85, f99: 2.1, out: 2.3 };
     // Burst: top-left in frame px, scale relative to its 181×116 size (frame 94 = scale 1)
     const B = { f94: 0.25 };
-    const burstKeys = [
-      { t: 0, s: 0.04, x: 629, y: 510 },
-      { t: B.f94, s: 1, x: 543, y: 454 },
-      // grows to ~frame 95 size, centred on where the tiger appears (705, 455), then still
-      { t: T.hold, s: 6.5, x: 705 - 181 * 3.25, y: 455 - 116 * 3.25 },
-      { t: T.burstOut, s: 6.5, x: 705 - 181 * 3.25, y: 455 - 116 * 3.25 },
-    ];
+    // Burst centred on the page: its red core (≈102, 50 in its 181×116 drawing) stays at frame (720, 450)
+    const CORE = { x: 102, y: 50 };
+    const at = (t: number, sc: number) => ({ t, s: sc, x: 720 - CORE.x * sc, y: 450 - CORE.y * sc });
+    const burstKeys = [at(0, 0.04), at(B.f94, 1), at(T.hold, 6.5), at(T.burstOut, 6.5)];
     // Tiger: position of the face (artboard 768, 474) in frame px, scale of the 1536×1024 artboard
     const tigerKeys = [
-      { t: T.tigerIn, s: 0.04, x: 720, y: 449 },
-      { t: T.burstOut, s: 0.6, x: 708, y: 430 },  // grows inside the still burst
-      { t: T.f98, s: 2.85, x: 715, y: 588 },      // then rushes to camera
-      { t: T.f99, s: 7.71, x: 715, y: 826 },
+      { t: T.tigerIn, s: 0.04, x: 720, y: 440 },  // born in the burst's red core
+      { t: T.burstOut, s: 0.6, x: 720, y: 440 },  // grows inside the still burst
+      { t: T.f98, s: 2.85, x: 718, y: 560 },      // then pounces at the reader
+      { t: T.f99, s: 7.71, x: 716, y: 800 },
       { t: T.out, s: 22.56, x: 715, y: 1257 },
     ];
     type Key = { t: number; s: number; x: number; y: number };
@@ -154,10 +153,11 @@ export function createClosing(section: HTMLElement): ClosingApi {
       { r: -1.2, sx: 1.02, sy: 1.01 }, { r: 2.6, sx: 0.98, sy: 0.96 }, { r: -2, sx: 1.03, sy: 1.02 },
     ];
     const burstSvg = burstEl.querySelector('svg')!;
+    const SHAKE = [[0.6, -0.8], [-1, 0.4], [0.9, 0.9], [-0.5, -1], [1, -0.2], [-0.8, 0.7]];
 
     // Debris that pops out of the burst: stars, shards and dots (frame-space origin = burst in 94)
     fxEl.innerHTML = '';
-    const ORIGIN = { x: 690, y: 470 };
+    const ORIGIN = { x: 720, y: 450 };
     const debris = Array.from({ length: 16 }, (_, i) => {
       const kind = i % 3 === 0 ? 'dot' : i % 3 === 1 ? 'star' : 'shard';
       const node = document.createElement('span');
@@ -173,11 +173,12 @@ export function createClosing(section: HTMLElement): ClosingApi {
     const renderFrontal = () => {
       const tq = held(clock.t);
       const n = Math.round(tq * FPS);
-      const boil = BOIL[n % BOIL.length];
+      // the burst boils only while it grows; once it reaches its size it is completely still
+      const boil = tq < T.hold ? BOIL[n % BOIL.length] : BOIL[0];
       const b = sample(burstKeys, tq);
-      // sized, not scaled, so the vector is redrawn crisp at every size; the boil wobbles it
+      // sized, not scaled, so the vector is redrawn crisp at every size
       gsap.set(burstEl, { x: fx(b.x), y: fy(b.y), width: 181 * b.s * k, height: 116 * b.s * k });
-      gsap.set(burstSvg, { rotation: boil.r, scaleX: boil.sx, scaleY: boil.sy, transformOrigin: '50% 50%' });
+      gsap.set(burstSvg, { rotation: boil.r, scaleX: boil.sx, scaleY: boil.sy, transformOrigin: `${(CORE.x / 181) * 100}% ${(CORE.y / 116) * 100}%` });
       for (const d of debris) {
         const age = tq - d.delay;
         if (age < 0 || tq >= T.burstOut) { d.node.style.visibility = 'hidden'; continue; }
@@ -186,12 +187,21 @@ export function createClosing(section: HTMLElement): ClosingApi {
         d.node.style.visibility = 'visible';
         gsap.set(d.node, {
           x: fx(ORIGIN.x + Math.cos(d.angle) * r) - size / 2, y: fy(ORIGIN.y + Math.sin(d.angle) * r) - size / 2,
-          width: size, height: size, rotation: d.spin * age + boil.r * 4,
+          width: size, height: size, rotation: d.spin * Math.min(age, 0.5),
         });
       }
       const g = sample(tigerKeys, tq);
       const sc = g.s * k;
-      gsap.set(frontalEl, { x: fx(g.x) - 768 * sc, y: fy(g.y) - 474 * sc, scale: sc, rotation: boil.r * 0.5, transformOrigin: '0 0' });
+      gsap.set(frontalEl, { x: fx(g.x) - 768 * sc, y: fy(g.y) - 474 * sc, scale: sc, transformOrigin: '0 0' });
+      // The pounce: everything shakes while the tiger comes at the reader, harder as it gets closer
+      if (tq >= T.burstOut && tq < T.out) {
+        const p = (tq - T.burstOut) / (T.out - T.burstOut);
+        const amp = (6 + 22 * p) * k;
+        const j = SHAKE[n % SHAKE.length];
+        gsap.set(stage, { x: j[0] * amp, y: j[1] * amp });
+      } else {
+        gsap.set(stage, { x: 0, y: 0 });
+      }
     };
     renderFrontal();
 
@@ -205,24 +215,55 @@ export function createClosing(section: HTMLElement): ClosingApi {
       .set([burstEl, fxEl], { autoAlpha: 0 }, T.burstOut)
       .set(frontalEl, { autoAlpha: 0 }, T.out);
 
-    // 100 · ~0.5 s of red, then 101–104 · profile tiger gallops left → right in 1.6 s, on twos
+    // 100 · ~0.5 s of red, then 101–104 · the profile tiger leaps in on a parabola,
+    // lands in the centre, and leaps out on another one. No leg cycle: the whole
+    // body tilts with the arc (nose up while rising, down while falling).
     const PROFILE_START = T.out + 0.5;
-    const PROFILE_DUR = 1.6;
+    const JUMP = 0.95;   // each leap
+    const LAND = 0.4;    // still in the centre
+    const PROFILE_DUR = JUMP * 2 + LAND;
     const g = profileGeometry();
-    gsap.set(profileEl, { width: g.width, height: g.height, top: g.top, left: 0, x: -g.width, autoAlpha: 1 });
+    gsap.set(profileEl, { width: g.width, height: g.height, top: g.top, left: 0, x: -g.width, y: 0, rotation: 0, autoAlpha: 1, transformOrigin: '50% 60%' });
     revealSentence(-Infinity);
     const haunch = 0.2; // fraction of the tiger width behind which the text is visible
+    const centreX = (vw() - g.width) / 2;
+    const leaps = [
+      { x0: -g.width, y0: vh() * 0.18, x1: centreX, y1: 0, h: vh() * 0.22 },
+      { x0: centreX, y0: 0, x1: vw() + 40, y1: vh() * 0.12, h: vh() * 0.22 },
+    ];
+    const leapAt = (l: typeof leaps[number], u: number) => ({
+      x: l.x0 + (l.x1 - l.x0) * u,
+      y: l.y0 + (l.y1 - l.y0) * u - 4 * l.h * u * (1 - u),
+    });
+    const jumpClock = { t: 0 };
+    const renderProfile = () => {
+      const tq = held(jumpClock.t);
+      let pos: { x: number; y: number }; let tilt = 0;
+      if (tq < JUMP) {
+        const u = tq / JUMP, l = leaps[0];
+        pos = leapAt(l, u);
+        const next = leapAt(l, Math.min(1, u + 0.02));
+        tilt = Math.max(-16, Math.min(16, (Math.atan2(next.y - pos.y, next.x - pos.x) * 180) / Math.PI));
+      } else if (tq < JUMP + LAND) {
+        pos = { x: centreX, y: 0 };
+      } else {
+        const u = Math.min(1, (tq - JUMP - LAND) / JUMP), l = leaps[1];
+        pos = leapAt(l, u);
+        const next = leapAt(l, Math.min(1, u + 0.02));
+        tilt = Math.max(-16, Math.min(16, (Math.atan2(next.y - pos.y, next.x - pos.x) * 180) / Math.PI));
+      }
+      gsap.set(profileEl, { x: pos.x, y: pos.y, rotation: tilt });
+      revealSentence(pos.x + g.width * haunch);
+    };
 
-    t.to(profileEl, {
-      x: vw() + 40, duration: PROFILE_DUR, ease: `steps(${Math.round(PROFILE_DUR * FPS)})`,
-      onUpdate: () => revealSentence((gsap.getProperty(profileEl, 'x') as number) + g.width * haunch),
-    }, PROFILE_START)
+    t.to(jumpClock, { t: PROFILE_DUR, duration: PROFILE_DUR, ease: 'none', onUpdate: renderProfile }, PROFILE_START)
       .set(profileEl, { autoAlpha: 0 }, PROFILE_START + PROFILE_DUR)
       // 104 · controls ~0.3 s after the sentence is complete
       .to(controls, { autoAlpha: 1, duration: 0.3, ease: 'power1.out' }, PROFILE_START + PROFILE_DUR + 0.3);
 
-    frontalWindow = [0, T.out + 0.05];
-    profileWindow = [PROFILE_START - 0.05, PROFILE_START + PROFILE_DUR + 0.05];
+    // No run cycles: both tigers keep their drawn pose (frontal pounces, profile leaps)
+    frontalWindow = [-1, -1];
+    profileWindow = [-1, -1];
     t.progress(progress);
   }
 
