@@ -279,12 +279,19 @@ html, body { background: var(--pale); }
 .closing { color: #fff; }
 .anchor { position: absolute; left: 0; width: 1px; height: 1px; pointer-events: none; }
 
-/* Intro (frames 1–3) */
-.intro { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: var(--pale); color: var(--black); display: grid; place-items: center; }
-.intro__title { margin: 0; display: grid; justify-items: center; line-height: 0.82; letter-spacing: -0.02em; }
+/* Intro (frames 1–8) */
+.intro__stage { background: var(--pale); color: var(--black); display: grid; place-items: center; }
+.intro__zoom { display: grid; place-items: center; transform-origin: 50% 47%; will-change: transform, opacity; }
+.intro__title { grid-area: 1 / 1; margin: 0; display: grid; justify-items: center; line-height: 0.82; letter-spacing: -0.02em; }
 .intro__tiger { font-size: min(33vw, 56vh); }         /* TIGER spans ~83% of the width, as in frame 3 */
-.intro__trafficking { font-size: min(14.2vw, 24vh); }  /* TRAFFICKING ~80% of the width */
-.intro__hint { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 134px; height: 67px; }
+.intro__trafficking { font-size: min(14.2vw, 24vh); } /* TRAFFICKING ~80% of the width */
+/* The tiger head shows through the letters (frame 3: text used as a mask over the head) */
+.intro__title--head {
+  color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-repeat: no-repeat; background-position: 50% 44%; background-size: min(49vw, 78vh) auto;
+}
+.intro__veil { position: absolute; inset: 0; background: var(--pale); opacity: 0; pointer-events: none; }
+.intro__hint { position: absolute; bottom: 0; left: 50%; margin-left: -67px; width: 134px; height: 67px; }
 .intro__hint svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: var(--black); }
 .intro__hint span { position: absolute; top: 12px; left: 0; right: 0; text-align: center; font: 900 14px var(--display); font-stretch: 75%; text-transform: uppercase; color: var(--pale); }
 

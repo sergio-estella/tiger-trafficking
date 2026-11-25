@@ -9,6 +9,7 @@
  */
 import { gsap } from 'gsap';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
+import headUrl from './assets/tiger-head.svg?url';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const vh = () => window.innerHeight;
@@ -128,17 +129,53 @@ function buildPlaceholder(p: Placeholder): HTMLElement {
   return section;
 }
 
+/**
+ * 00 · Intro (frames 1–8). The title fades in (1 → 2 → 3) with a tiger head
+ * showing through the letters; scrolling zooms into the head until everything
+ * dissolves into the pale background (4 → 8), where chapter 01 begins.
+ */
+function buildIntro(): HTMLElement {
+  const section = html('section', 'scene intro');
+  section.id = 'ch00';
+  section.dataset.frames = '1–8';
+  section.style.height = '190vh';
+  const words = '<span class="intro__tiger">Tiger</span><span class="intro__trafficking">Trafficking</span>';
+  section.innerHTML = `
+    <div class="scene__stage intro__stage">
+      <div class="intro__zoom">
+        <h1 class="intro__title display">${words}</h1>
+        <div class="intro__title intro__title--head display" aria-hidden="true" style="background-image: url('${headUrl}')">${words}</div>
+      </div>
+      <div class="intro__veil" aria-hidden="true"></div>
+      <div class="intro__hint" aria-hidden="true">
+        <svg viewBox="0 0 134 67"><path d="M67 67L0 0H134L67 67Z" /></svg>
+        <span>Scroll down</span>
+      </div>
+    </div>`;
+  const zoom = section.querySelector<HTMLElement>('.intro__zoom')!;
+  const veil = section.querySelector<HTMLElement>('.intro__veil')!;
+  const hint = section.querySelector<HTMLElement>('.intro__hint')!;
+
+  const tl = gsap.timeline({ paused: true });
+  tl.addLabel('hidden')
+    .fromTo(zoom, { opacity: 0 }, { opacity: 0.2, duration: reduced ? 0.01 : 0.35, ease: 'none' })   // frame 2
+    .to(zoom, { opacity: 1, duration: reduced ? 0.01 : 0.6, ease: 'power1.out' })                    // frame 3
+    .fromTo(hint, { y: 67, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' })
+    .addLabel('in')
+    .to(hint, { y: 67, opacity: 0, duration: 0.2 }, 'in')
+    // 4 → 8: into the tiger's face, dissolving into the pale background
+    .to(zoom, { scale: reduced ? 1 : 9, duration: reduced ? 0.01 : 1.4, ease: 'power2.in' }, 'in')
+    .fromTo(veil, { opacity: 0 }, { opacity: 1, duration: reduced ? 0.3 : 0.9, ease: 'power1.in' }, reduced ? 'in' : 'in+=0.5')
+    .addLabel('zoom');
+
+  // 'in' plays on load (threshold far above); the zoom starts after a short scroll
+  scenes.push({ section, tl, labels: ['hidden', 'in', 'zoom'], at: [-99, 0.15], index: 0 });
+  return section;
+}
+
 /** Inserts the intro, openers and placeholders before `before` (the closing section). */
 export function buildStory(before: HTMLElement) {
-  const intro = html('section', 'intro');
-  intro.id = 'ch00';
-  intro.dataset.frames = '1–8';
-  intro.innerHTML = `
-    <h1 class="intro__title display"><span class="intro__tiger">Tiger</span><span class="intro__trafficking">Trafficking</span></h1>
-    <div class="intro__hint" aria-hidden="true">
-      <svg viewBox="0 0 134 67"><path d="M67 67L0 0H134L67 67Z" /></svg>
-      <span>Scroll down</span>
-    </div>`;
+  const intro = buildIntro();
   const frag = document.createDocumentFragment();
   frag.append(intro);
   for (const s of story) frag.append(s.kind === 'opener' ? buildOpener(s) : buildPlaceholder(s));
