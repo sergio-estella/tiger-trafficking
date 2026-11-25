@@ -2,9 +2,10 @@
  * Closing sequence (storyboard frames 93–104). Agreed behaviour:
  *
  * - One trigger at the end of the map hold (~150vh) plays the whole jump on a
- *   clock (~3 s): burst + frontal tiger rushing through the camera (94–99,
- *   ~1.2 s), a beat of red (100), profile tiger galloping across and uncovering
- *   the sentence (101–104, 1 s), controls ~0.3 s later.
+ *   clock (~4.7 s): burst grows and holds still 1 s while the tiger appears
+ *   inside it; the tiger rushes through the camera (94–99, ~2.3 s); 0.5 s of red
+ *   (100); profile tiger gallops across and uncovers the sentence (101–104,
+ *   1.6 s); controls ~0.3 s later.
  * - Comic timing (reference video): 12 drawings per second, boiling shapes,
  *   debris popping out of the burst, hard cuts.
  * - Scroll does not scrub frames. The stage is sticky; fast scrolling never
@@ -108,26 +109,25 @@ export function createClosing(section: HTMLElement): ClosingApi {
 
     // 94–99 · burst + frontal tiger. Keyframes measured in Figma (frames 94–99).
     // Scale is interpolated in log space: constant-speed zoom, like a real approach.
-    const T = { f95: 0.55, f96: 0.62, f97: 0.8, f98: 0.95, f99: 1.1, out: 1.25 };
-    // Burst (Group 273/274): top-left in frame px, scale relative to its 181×116 size
-    // Like the reference: the burst is born from a point and grows, accelerating,
-    // until it fills the screen (~0.9 s); its own timing, ahead of the tiger's.
-    const B = { f94: 0.25, f95: 0.5, f96: 0.62, f97: 0.78, f98: 0.92 };
+    // Rhythm agreed after the first comic test:
+    // burst grows (0–0.6 s) → holds still 1 s while the tiger appears inside it →
+    // burst cut, tiger rushes to camera over red (→ 2.3 s) → 0.5 s of red →
+    // profile tiger crosses in 1.6 s.
+    const T = { hold: 0.6, tigerIn: 0.7, burstOut: 1.6, f98: 1.85, f99: 2.1, out: 2.3 };
+    // Burst: top-left in frame px, scale relative to its 181×116 size (frame 94 = scale 1)
+    const B = { f94: 0.25 };
     const burstKeys = [
       { t: 0, s: 0.04, x: 629, y: 510 },
       { t: B.f94, s: 1, x: 543, y: 454 },
-      { t: B.f95, s: 15.5, x: -913, y: -287 },
-      { t: B.f96, s: 19.4, x: -1390, y: -454 },
-      { t: B.f97, s: 35.8, x: -3197, y: -1331 },
-      { t: B.f98, s: 63.4, x: -6109, y: -2650 },
+      // grows to ~frame 95 size, centred on where the tiger appears (705, 455), then still
+      { t: T.hold, s: 6.5, x: 705 - 181 * 3.25, y: 455 - 116 * 3.25 },
+      { t: T.burstOut, s: 6.5, x: 705 - 181 * 3.25, y: 455 - 116 * 3.25 },
     ];
-    // Tiger (Group 275): position of the face (artboard 768, 474) in frame px, scale of the 1536×1024 artboard
-    // Tiger appears in 96 and passes the camera after 99 (continues to 'out' while it fades)
+    // Tiger: position of the face (artboard 768, 474) in frame px, scale of the 1536×1024 artboard
     const tigerKeys = [
-      { t: T.f95, s: 0.02, x: 720, y: 449 },
-      { t: T.f96, s: 0.053, x: 720, y: 449 },
-      { t: T.f97, s: 1.0, x: 694, y: 414 },
-      { t: T.f98, s: 2.85, x: 715, y: 588 },
+      { t: T.tigerIn, s: 0.04, x: 720, y: 449 },
+      { t: T.burstOut, s: 0.6, x: 708, y: 430 },  // grows inside the still burst
+      { t: T.f98, s: 2.85, x: 715, y: 588 },      // then rushes to camera
       { t: T.f99, s: 7.71, x: 715, y: 826 },
       { t: T.out, s: 22.56, x: 715, y: 1257 },
     ];
@@ -157,7 +157,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
 
     // Debris that pops out of the burst: stars, shards and dots (frame-space origin = burst in 94)
     fxEl.innerHTML = '';
-    const ORIGIN = { x: 633, y: 512 };
+    const ORIGIN = { x: 690, y: 470 };
     const debris = Array.from({ length: 16 }, (_, i) => {
       const kind = i % 3 === 0 ? 'dot' : i % 3 === 1 ? 'star' : 'shard';
       const node = document.createElement('span');
@@ -180,9 +180,9 @@ export function createClosing(section: HTMLElement): ClosingApi {
       gsap.set(burstSvg, { rotation: boil.r, scaleX: boil.sx, scaleY: boil.sy, transformOrigin: '50% 50%' });
       for (const d of debris) {
         const age = tq - d.delay;
-        if (age < 0 || tq >= B.f98) { d.node.style.visibility = 'hidden'; continue; }
-        const r = d.speed * age * (1 + age * 2); // accelerates outwards with the burst
-        const size = d.size * (1 + age * 4) * k;
+        if (age < 0 || tq >= T.burstOut) { d.node.style.visibility = 'hidden'; continue; }
+        const r = d.speed * Math.min(age, 0.5) * (1 + Math.min(age, 0.5) * 2); // flies out, then settles around the still burst
+        const size = d.size * (1 + Math.min(age, 0.5) * 4) * k;
         d.node.style.visibility = 'visible';
         gsap.set(d.node, {
           x: fx(ORIGIN.x + Math.cos(d.angle) * r) - size / 2, y: fy(ORIGIN.y + Math.sin(d.angle) * r) - size / 2,
@@ -199,29 +199,30 @@ export function createClosing(section: HTMLElement): ClosingApi {
       .to(clock, { t: T.out, duration: T.out, ease: 'none', onUpdate: renderFrontal }, 0)
       .set(burstEl, { autoAlpha: 1 }, 0)
       .set(fxEl, { autoAlpha: 1 }, 0)
-      .set(frontalEl, { autoAlpha: 1 }, T.f96)
-      // 99 → 100: hard cut — the burst has filled the screen, the tiger passes the camera
-      .set(cover, { autoAlpha: 1 }, T.f99)
-      .set([burstEl, fxEl], { autoAlpha: 0 }, T.f99)
+      .set(frontalEl, { autoAlpha: 1 }, T.tigerIn)
+      // hard cut: the burst goes, the tiger keeps coming over plain red
+      .set(cover, { autoAlpha: 1 }, T.burstOut)
+      .set([burstEl, fxEl], { autoAlpha: 0 }, T.burstOut)
       .set(frontalEl, { autoAlpha: 0 }, T.out);
 
-    // 101–104 · profile tiger gallops left → right in 1 s, on twos, uncovers the sentence and leaves the screen
-    const PROFILE_START = 1.5;
+    // 100 · ~0.5 s of red, then 101–104 · profile tiger gallops left → right in 1.6 s, on twos
+    const PROFILE_START = T.out + 0.5;
+    const PROFILE_DUR = 1.6;
     const g = profileGeometry();
     gsap.set(profileEl, { width: g.width, height: g.height, top: g.top, left: 0, x: -g.width, autoAlpha: 1 });
     revealSentence(-Infinity);
     const haunch = 0.2; // fraction of the tiger width behind which the text is visible
 
     t.to(profileEl, {
-      x: vw() + 40, duration: 1, ease: `steps(${FPS})`,
+      x: vw() + 40, duration: PROFILE_DUR, ease: `steps(${Math.round(PROFILE_DUR * FPS)})`,
       onUpdate: () => revealSentence((gsap.getProperty(profileEl, 'x') as number) + g.width * haunch),
     }, PROFILE_START)
-      .set(profileEl, { autoAlpha: 0 }, PROFILE_START + 1)
+      .set(profileEl, { autoAlpha: 0 }, PROFILE_START + PROFILE_DUR)
       // 104 · controls ~0.3 s after the sentence is complete
-      .to(controls, { autoAlpha: 1, duration: 0.3, ease: 'power1.out' }, PROFILE_START + 1.3);
+      .to(controls, { autoAlpha: 1, duration: 0.3, ease: 'power1.out' }, PROFILE_START + PROFILE_DUR + 0.3);
 
     frontalWindow = [0, T.out + 0.05];
-    profileWindow = [PROFILE_START - 0.05, PROFILE_START + 1.05];
+    profileWindow = [PROFILE_START - 0.05, PROFILE_START + PROFILE_DUR + 0.05];
     t.progress(progress);
   }
 

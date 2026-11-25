@@ -10,12 +10,14 @@ Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
 | 92 → 92_C | El texto del capítulo sube y sale sobre el fondo rojo fijo; «07.» se queda | scroll | ~90 vh |
 | 92_D → 93 | El mapa aparece con un fundido de 0,5 s en su sitio; «07.» se va | ANIMATE | 0,5 s |
 | 93 | Mapa explorable (tierra negra, sin rayas), fijado durante ~150 vh de scroll | HOLD · EXPLORE | lo decide el lector |
-| 94–99 | Estallido (estrella negro / amarillo / rojo) y tigre frontal que atraviesa la cámara; en 99 casi solo queda rojo | ANIMATE | ~1,2 s |
-| 100 | Pantalla roja | ANIMATE | ~0,25 s |
-| 101–103 | El tigre de perfil cruza al galope y destapa la frase; sale de la pantalla | ANIMATE | 1 s |
+| 94–95 | El estallido nace en el mar y crece a saltos (~0,6 s) | ANIMATE | 0,6 s |
+| 95 (quieto) | El estallido se queda quieto 1 s; dentro aparece el tigre frontal, pequeño, y empieza a crecer | ANIMATE | 1 s |
+| 96–99 | Corte: desaparece el estallido y el tigre se acerca a cámara sobre rojo hasta llenar la pantalla | ANIMATE | ~0,7 s |
+| 100 | Pantalla roja | ANIMATE | 0,5 s |
+| 101–103 | El tigre de perfil cruza al galope y destapa la frase; sale de la pantalla | ANIMATE | 1,6 s |
 | 104 | Frase completa; ~0,3 s después, Play again · Share | HOLD · READ | — |
 
-Total: ~3 s (rebobinado al doble: ~1,5 s).
+Total: ~4,7 s (rebobinado al doble: ~2,4 s).
 
 Tipografía de la frase: 82 px a 1440×900 (antes 100 px, −18 %), escala con el ancho y el alto de la ventana; 66 px a 440 px de ancho en móvil (antes 80 px).
 
