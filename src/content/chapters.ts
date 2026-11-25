@@ -36,14 +36,7 @@ export interface Placeholder {
 export type Section = Opener | Placeholder;
 
 export const story: Section[] = [
-  {
-    kind: 'opener', id: 'ch01', number: '01.', frames: '9–15', theme: 'pale',
-    title: '100,000 ~ 5,600', subtitle: 'Wild tigers a century ago',
-    body: 'A century ago, an estimated 100,000 tigers lived in the wild. In 2023, the estimate was about 5,600.',
-    body2: 'Habitat loss and poaching have driven the decline. Seizure records reveal what happens to some of the tigers caught up in the illegal trade.',
-    enter: { title: 'none', body: 'none' }, exit: { title: 'above', body: 'above' },
-  },
-  { kind: 'placeholder', number: '01.', frames: '11–15', title: 'Walking tiger · ink splash', note: 'Transition into chapter 02' },
+  // 01 (frames 9–15) is part of the intro scene in src/story.ts: the zoom flows straight into it
   {
     kind: 'opener', id: 'ch02', number: '02.', frames: '16–21', theme: 'pale',
     title: 'Sold in pieces',

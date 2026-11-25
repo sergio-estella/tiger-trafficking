@@ -323,3 +323,10 @@ html, body { background: var(--pale); }
   .opener__body--next { left: 6vw; right: 6vw; }
   .placeholder__box { width: 86vw; padding: 24px; }
 }
+
+/* 01 (frames 9–15), on the intro stage */
+.ch01 { position: absolute; inset: 0; pointer-events: none; }
+.walker { position: absolute; top: 0; left: 0; }
+.walker img { position: absolute; inset: 0; width: 100%; height: auto; }
+.walker__frame { visibility: hidden; }
+.splash { position: absolute; top: 0; left: 0; transform-origin: 50% 50%; }
