@@ -1,4 +1,7 @@
 :root {
+  /* One display size for chapter titles, chapter numbers and the final sentence:
+     82 px at 1440×900 (storyboard 100 px, −18 %), shrinks with width or height */
+  --display-size: clamp(36px, min(5.7vw, 9.1vh), 120px);
   --red: #e52316;
   --black: #111111;
   --extinct: #9e220a;
@@ -47,10 +50,10 @@ button { font: inherit; color: inherit; }
 /* The chapter text sits over the pinned stage and scrolls up and out (92 → 92_C) */
 .chapter { position: absolute; z-index: 5; top: 0; left: 0; right: 0; height: 100vh; height: 100svh; pointer-events: none; }
 .chapter__inner { position: absolute; left: 20.8vw; top: 46%; max-width: 58vw; }
-.chapter__title { margin: 0; font-size: clamp(56px, 6.94vw, 140px); line-height: 1; }
-.chapter__text { margin: 0.4em 0 0; font-size: clamp(22px, 3.47vw, 64px); line-height: 1.25; font-weight: 400; }
+.chapter__title { margin: 0; font-size: var(--display-size); line-height: 1; }
+.chapter__text { margin: 0.4em 0 0; font-size: calc(var(--display-size) * 0.5); line-height: 1.25; font-weight: 400; } /* half the title, as in frame 92 */
 .chapter__text strong { font-weight: 700; }
-.chapter__number { position: absolute; z-index: 1; left: 0; bottom: -0.12em; font-size: clamp(56px, 6.94vw, 140px); line-height: 1; font-weight: 400; }
+.chapter__number { position: absolute; z-index: 1; left: 0; bottom: -0.12em; font-size: var(--display-size); line-height: 1; font-weight: 400; }
 
 /* ------------------------------------------------------------------ closing */
 /* 100vh stage + 90vh chapter text scrolling out + 150vh explorable map + 100vh runway */
@@ -161,7 +164,7 @@ button { font: inherit; color: inherit; }
      A TIGER SHOULD / NEVER DIE FOR / SOMEONE ELSE’S / PROFIT. */
   margin: 0; max-width: 8.2em;
   /* 82 px at 1440×900 (storyboard: 100 px, −18 %); shrinks with width or height */
-  font-size: clamp(36px, min(5.7vw, 9.1vh), 120px); line-height: 1.12;
+  font-size: var(--display-size); line-height: 1.12;
   /* hidden by clipping only, so screen readers can always read it */
   clip-path: inset(0 100% 0 0);
 }
@@ -214,9 +217,8 @@ button { font: inherit; color: inherit; }
 /* ------------------------------------------------------------------ mobile (93-map_1/2, 101_mobile) */
 @media (max-width: 700px) and (orientation: portrait) {
   .chapter__inner { left: 6vw; right: 6vw; top: auto; bottom: 18vh; max-width: none; }
-  .chapter__title { font-size: 16vw; }
-  .chapter__text { font-size: 6.4vw; }
-  .chapter__number { font-size: 16vw; }
+  :root { --display-size: min(15vw, 8vh); } /* 66 px at 440 wide (storyboard 80 px, −18 %) */
+  .chapter__text { font-size: calc(var(--display-size) * 0.42); }
 
   /* Horizontal drag is handled in JS (map.ts); the browser keeps the vertical
      gesture, so the page always scrolls. A native overflow-x scroller here
@@ -256,7 +258,7 @@ button { font: inherit; color: inherit; }
   .final__content { left: 5.5vw; right: 5.5vw; top: 72px; bottom: 6vh; transform: none; justify-content: center; }
   .final__controls { position: absolute; left: 0; right: 0; bottom: 0; }
   /* 66 px at 440 px wide (storyboard: 80 px, −18 %) */
-  .final__sentence { max-width: none; font-size: min(15vw, 8vh); line-height: 0.92; }
+  .final__sentence { max-width: none; line-height: 0.92; }
   .final__controls { gap: 22px; }
 }
 

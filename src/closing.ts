@@ -236,11 +236,11 @@ export function createClosing(section: HTMLElement): ClosingApi {
       .set(frontalEl, { autoAlpha: 0 }, T.out);
 
     // 100 · ~0.5 s of red, then 101–104 · the profile tiger leaps in on a parabola,
-    // lands in the centre, and leaps out on another one. No leg cycle: the whole
+    // touches down in the centre and leaps straight out on another one, without stopping. No leg cycle: the whole
     // body tilts with the arc (nose up while rising, down while falling).
     const PROFILE_START = T.out + 0.5;
     const JUMP = 0.95;   // each leap
-    const LAND = 0.4;    // still in the centre
+    const LAND = 0;      // touch-and-go in the centre: it never stops
     const PROFILE_DUR = JUMP * 2 + LAND;
     const g = profileGeometry();
     gsap.set(profileEl, { width: g.width, height: g.height, top: g.top, left: 0, x: -g.width, y: 0, rotation: 0, autoAlpha: 1, transformOrigin: '50% 60%' });
