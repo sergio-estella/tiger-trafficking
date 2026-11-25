@@ -73,15 +73,16 @@ export function createProfileTiger(container: HTMLElement): Tiger {
     const a = phase * TAU;
     const s = Math.sin(a);
     const c = Math.cos(a);
-    // Legs. Positive rotation = clockwise in SVG (a front leg pointing right swings down/back).
-    gsap.set(p['front-leg-left'], { rotation: 22 * s - 4 });
-    gsap.set(p['front-leg-right'], { rotation: 22 * Math.sin(a - 0.6) - 4 });
-    gsap.set(p['hind-leg-left'], { rotation: -20 * s + 2 });
-    gsap.set(p['hind-leg-right'], { rotation: -20 * Math.sin(a - 0.6) + 2 });
-    // Whole body: two bounces per stride would read as trotting; one bounce + pitch reads as a gallop
-    gsap.set(rig, { y: -26 * Math.max(0, c), rotation: -3.5 * s });
+    // Gallop: the two front legs land almost together, then the two hind legs,
+    // with a long reach (extension) and a big gather. Positive rotation = clockwise.
+    gsap.set(p['front-leg-left'], { rotation: 32 * s - 6 });
+    gsap.set(p['front-leg-right'], { rotation: 32 * Math.sin(a - 0.3) - 6 });
+    gsap.set(p['hind-leg-left'], { rotation: -30 * Math.sin(a + 0.4) + 4 });
+    gsap.set(p['hind-leg-right'], { rotation: -30 * Math.sin(a + 0.1) + 4 });
+    // Whole body: one bound per stride (suspension phase) and a strong pitch
+    gsap.set(rig, { y: -40 * Math.max(0, c), rotation: -5 * s });
     // Head stabilises against the pitch, jaw breathes
-    gsap.set(p.head, { rotation: 3 * s });
+    gsap.set(p.head, { rotation: 4.5 * s });
     gsap.set(p.jaw, { rotation: 5 + 5 * Math.sin(a * 2) });
     // Tail: travelling wave, each segment lags the previous one
     gsap.set(p['tail-1'], { rotation: 8 * Math.sin(a - 0.8) });

@@ -1,4 +1,4 @@
-# Brief · Cierre (frames 93–101)
+# Brief · Cierre (frames 93–104)
 
 Acuerdos de la entrevista de diseño previa a la primera prueba en navegador.
 Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
@@ -7,15 +7,19 @@ Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
 
 | Frames | Qué pasa | Estado | Duración |
 |---|---|---|---|
-| 93 | Mapa explorable, fijado durante ~150 vh de scroll | HOLD · EXPLORE | lo decide el lector |
-| 94–97 | El tigre frontal corre hacia cámara (se acerca, no se escala) y se desvanece | ANIMATE | ~3 s |
-| — | Pantalla roja | ANIMATE | ~1 s |
-| 98–100 | El tigre de perfil cruza de izquierda a derecha y destapa la frase desde detrás | ANIMATE | ~2 s |
-| 101 | Frase completa; ~0,5 s después, compartir · créditos · volver al inicio (+ menú, sin diseñar) | HOLD · READ | — |
+| 93 | Mapa explorable, fijado durante ~150 vh de scroll. Entra subiendo con el scroll y con un fundido de 0,5 s | HOLD · EXPLORE | lo decide el lector |
+| 94–99 | Estallido (estrella negro / amarillo / rojo) y tigre frontal que atraviesa la cámara; en 99 casi solo queda rojo | ANIMATE | ~1,2 s |
+| 100 | Pantalla roja | ANIMATE | ~0,25 s |
+| 101–103 | El tigre de perfil cruza al galope y destapa la frase; sale de la pantalla | ANIMATE | 1 s |
+| 104 | Frase completa; ~0,3 s después, compartir · créditos · volver al inicio (+ menú, sin diseñar) | HOLD · READ | — |
+
+Total: ~3 s (rebobinado al doble: ~1,5 s).
+
+Tipografía de la frase: 82 px a 1440×900 (antes 100 px, −18 %), escala con el ancho y el alto de la ventana; 66 px a 440 px de ancho en móvil (antes 80 px).
 
 ## Disparo y scroll
 
-- Un único umbral al final del mapa lanza los ~6 s seguidos. La animación va por tiempo; el scroll no mueve fotogramas.
+- Un único umbral al final del mapa lanza los ~3 s seguidos. La animación va por tiempo; el scroll no mueve fotogramas.
 - Scroll rápido hacia delante: escena fijada, la animación siempre termina y luego se libera. Sin bloqueo de scroll.
 - Hacia atrás: rebobinado como un vídeo (los tigres corren hacia atrás) al doble de velocidad (~3 s). Primero se van los controles y luego el tigre vuelve a tapar la frase.
 - Cambio de sentido a mitad: se invierte en el acto, con un margen de ~90 px de scroll para que no tartamudee.
@@ -39,7 +43,7 @@ Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
 ## Pendiente
 
 - **Cifras sin contrastar con las fuentes originales** (`src/data/countries.ts`, `VERIFIED = false`).
-- PDF del storyboard: no recibido.
+- Referencia de móvil: los diseños están a 440 px; se prueba también a 360 y 390 px.
 - Menú y controles del 101 sin diseñar (marcadores de posición).
 - Entrada al mapa (92 → 93) y el resto de la pieza.
 - Decoración de rayas dentro del mapa: aproximada; falta el SVG original.
@@ -48,9 +52,9 @@ Fuente visual: Figma, página «Tiger trafficking — Storyboard 2».
 
 1. Explorar el mapa (clic, hover; en móvil tocar y arrastrar en horizontal) nunca dispara el salto.
 2. El salto se dispara al cruzar el umbral, a ~150 vh del inicio del mapa.
-3. Un flick fuerte o la inercia del trackpad no se saltan nada; la secuencia se ve completa (~6 s) y la página no parece congelada.
-4. La frase nunca se ve a medias en reposo; está completa cuando la cola sale por la derecha; los controles aparecen ~0,5 s después.
-5. Subiendo desde el 101: rebobinado de ~3 s hasta el mapa tal como estaba; al cambiar de sentido a mitad, se invierte sin tirones y no oscila con un scroll mínimo.
+3. Un flick fuerte o la inercia del trackpad no se saltan nada; la secuencia se ve completa (~3 s) y la página no parece congelada.
+4. La frase nunca se ve a medias en reposo; está completa cuando la cola sale por la derecha; los controles aparecen ~0,3 s después.
+5. Subiendo desde el 101: rebobinado de ~1,5 s hasta el mapa tal como estaba; al cambiar de sentido a mitad, se invierte sin tirones y no oscila con un scroll mínimo.
 6. Bajar de nuevo repite el salto completo.
 7. En móvil (440 px de referencia), el gesto vertical sobre el mapa siempre hace scroll de la página.
 8. Con «reducir movimiento» no aparece ningún tigre en movimiento, solo fundidos.

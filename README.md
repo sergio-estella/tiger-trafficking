@@ -1,7 +1,7 @@
 # Tiger Trafficking
 
 Editorial scrollytelling piece. This first prototype covers the **closing sequence**
-(storyboard frames 92–101): explorable map → frontal tiger → profile tiger → final sentence.
+(storyboard frames 92–104): explorable map → frontal tiger → profile tiger → final sentence.
 
 > ⚠️ Figures are pending verification against the original sources. Do not publish.
 
