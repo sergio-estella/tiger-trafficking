@@ -332,3 +332,38 @@ html, body { background: var(--pale); }
 .walker img { position: absolute; inset: 0; width: 100%; height: auto; }
 .walker__frame { visibility: hidden; }
 .splash { position: absolute; top: 0; left: 0; transform-origin: 50% 50%; }
+
+/* ================================================================== 02 · One face per year (frames 22–28) */
+.faces__stage { background: var(--pale); color: var(--black); }
+.faces__title { position: absolute; left: 6.5vw; top: 5.5vh; margin: 0; font-size: calc(var(--display-size) * 0.85); line-height: 1; }
+.faces__lede { position: absolute; left: 6.5vw; top: calc(5.5vh + var(--display-size) * 0.95); margin: 0; max-width: 22em; font: 400 14px/1.4 var(--body); opacity: 0.75; }
+.faces__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.faces__labels { position: absolute; inset: 0; pointer-events: none; }
+.face-cell { cursor: default; transition: opacity 0.15s; }
+.is-explorable .face-cell { cursor: pointer; }
+.face-cell.is-dim { opacity: 0.45; }
+.face-label { position: absolute; display: flex; gap: 10px; align-items: flex-start; opacity: 0; transform-origin: center; transition: opacity 0.15s; }
+.face-label.is-on { opacity: 1; }
+.face-label--left { flex-direction: row-reverse; text-align: right; }
+.face-label__hex { width: 24px; height: 24px; flex: none; margin-top: 2px; }
+.face-label__text { display: grid; gap: 1px; font: 400 13px/1.3 var(--body); white-space: nowrap; }
+.face-label__text strong { font: 700 16px/1.2 var(--slab); }
+.face-label__text code { font: 700 12px/1.4 'Roboto Mono', ui-monospace, monospace; }
+.faces__leader { pointer-events: none; }
+.faces__leader-line { fill: none; stroke: #111; stroke-width: 1.2; }
+.faces__leader-dot { fill: var(--yellow); stroke: #111; stroke-width: 1.2; }
+.faces__year { cursor: default; outline: none; }
+.is-explorable .faces__year { cursor: pointer; }
+.faces__year-box { fill: transparent; stroke: transparent; stroke-width: 2; }
+.faces__year.is-on .faces__year-box, .faces__year:focus-visible .faces__year-box { fill: var(--pale); stroke: #111; }
+.faces__year-label, .faces__year-axis { font: 400 12px 'Roboto Mono', ui-monospace, monospace; fill: #111; }
+.faces__year.is-on .faces__year-label { font-weight: 700; }
+.faces__note { position: absolute; margin: 0; padding: 6px 0 0; border-top: 1.5px solid #111; font: 400 14px/1.35 var(--body); color: #111; white-space: nowrap; pointer-events: none; }
+
+@media (max-width: 700px) and (orientation: portrait) {
+  .faces__title { top: 10vh; left: 6vw; }
+  .faces__lede { display: none; }
+  .face-label { justify-content: center; }
+  .face-label--left { flex-direction: row; text-align: left; }
+  .faces__note { white-space: normal; max-width: 88vw; }
+}

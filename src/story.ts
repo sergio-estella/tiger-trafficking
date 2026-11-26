@@ -8,6 +8,8 @@
  * with the scroll position.
  */
 import { gsap } from 'gsap';
+import { registerScene, startEngine } from './engine';
+import { buildFaces } from './scenes/faces';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
 import headUrl from './assets/tiger-head.svg?url';
 import walk1 from './assets/walk/frame-01.svg?url';
@@ -21,39 +23,6 @@ import { gunshot } from './sound';
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const vh = () => window.innerHeight;
 const vw = () => window.innerWidth;
-
-interface Stepped {
-  section: HTMLElement;
-  tl: gsap.core.Timeline;
-  labels: string[];
-  /** Thresholds in vh, relative to the section top: crossing the i-th one goes to labels[i + 1] */
-  at: number[];
-  index: number;
-  tween?: gsap.core.Tween;
-  /** Going back from this label index or later cuts instead of playing backwards (tiger animations) */
-  cutBackFrom?: number;
-  started?: boolean;
-}
-
-const scenes: Stepped[] = [];
-
-function update() {
-  const y = window.scrollY;
-  for (const s of scenes) {
-    const top = s.section.offsetTop;
-    let index = 0;
-    for (const a of s.at) if (y >= top + a * vh()) index++;
-    if (index === s.index && s.started) continue;
-    const back = index < s.index;
-    const cut = (back && s.cutBackFrom !== undefined && s.index >= s.cutBackFrom)
-      || (!s.started && index >= 2); // landing deep in the page (reload, menu link): no replay of earlier steps
-    s.started = true;
-    s.index = index;
-    s.tween?.kill();
-    if (cut) s.tl.pause().seek(s.labels[index]);
-    else s.tween = s.tl.tweenTo(s.labels[index], { ease: 'none' });
-  }
-}
 
 function offset(from: From) {
   switch (from) {
@@ -128,7 +97,7 @@ function buildOpener(o: Opener): HTMLElement {
   if (leaving.length) tl.to(leaving, { y: -vh() * 0.6, opacity: 0, duration: D, ease: 'power2.in' }, labels[labels.length - 2]);
   tl.addLabel('out');
 
-  scenes.push({ section, tl, labels, at, index: 0 });
+  registerScene({ section, tl, labels, at });
   return section;
 }
 
@@ -271,7 +240,7 @@ function buildIntro(): HTMLElement {
     .to([walker, splash, second, number], { autoAlpha: 0, duration: 0.7 * D }, `walk+=${1.3 * D}`)
     .addLabel('gone');
 
-  scenes.push({ section, tl, labels: ['hidden', 'in', 'ch01', 'walk', 'gone'], at: [-99, 0.15, 1.0, 1.9], index: 0, cutBackFrom: 3 });
+  registerScene({ section, tl, labels: ['hidden', 'in', 'ch01', 'walk', 'gone'], at: [-99, 0.15, 1.0, 1.9], cutBackFrom: 3 });
   return section;
 }
 
@@ -280,10 +249,12 @@ export function buildStory(before: HTMLElement) {
   const intro = buildIntro();
   const frag = document.createDocumentFragment();
   frag.append(intro);
-  for (const s of story) frag.append(s.kind === 'opener' ? buildOpener(s) : buildPlaceholder(s));
+  for (const s of story) {
+    if (s.kind === 'opener') frag.append(buildOpener(s));
+    else if (s.kind === 'faces') frag.append(buildFaces());
+    else frag.append(buildPlaceholder(s));
+  }
   before.before(frag);
 
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update);
-  update();
+  startEngine();
 }

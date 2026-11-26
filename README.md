@@ -27,6 +27,10 @@ npm run dev
 |---|---|
 | `src/content/chapters.ts` | Story order: chapter openers (copy, entrances/exits) and chart placeholders |
 | `src/story.ts` | Builds intro, openers and placeholders; stepped-scene engine (sticky stage, scroll thresholds → timeline labels) |
+| `src/engine.ts` | Stepped-scene engine: sticky stage, scroll thresholds → timeline labels, cut-back for heavy steps |
+| `src/data/series.ts` + `src/data/*.csv` | Shared data layer (story and dashboard) |
+| `src/charts/faces.ts` | Tiger-head weighted Voronoi (reusable: story + dashboard) |
+| `src/scenes/faces.ts` | 02 · One face per year (frames 22–28) |
 | `src/closing.ts` | Trigger, timeline, rewind, hysteresis, reduced motion |
 | `src/tigers.ts` | Articulated tiger rigs and run cycles |
 | `src/map.ts` | Explorable map, country card, legend |

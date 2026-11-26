@@ -33,7 +33,10 @@ export interface Placeholder {
   note: string;
 }
 
-export type Section = Opener | Placeholder;
+/** A built chart scene (see src/scenes/) */
+export interface Built { kind: 'faces'; frames: string }
+
+export type Section = Opener | Placeholder | Built;
 
 export const story: Section[] = [
   // 01 (frames 9–15) is part of the intro scene in src/story.ts: the zoom flows straight into it
@@ -43,7 +46,7 @@ export const story: Section[] = [
     body: 'Some tigers are found alive.<br />Others are found dead.<br />In many seizures,<br />what authorities find is a skin, bones, claws or teeth.',
     enter: { title: 'right', body: 'below' }, exit: { title: 'left', body: 'above' },
   },
-  { kind: 'placeholder', number: '02.', frames: '22–28', title: 'One face per year', note: 'Parts of the tiger found in seizures, 2004 → 2023' },
+  { kind: 'faces', frames: '22–28' },
   {
     kind: 'opener', id: 'ch03', number: '03.', frames: '29–34', theme: 'pale',
     title: 'How many tigers?',
