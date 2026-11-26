@@ -10,6 +10,9 @@ Data file: `src/data/tiger-map-countries.csv`.
 
 ## Story and dashboard data (shared)
 
+How the files were built, how 2025 (January–June) was derived and the known discrepancies
+(people jailed 387 vs 375; units seized cover 2000 – June 2022): `src/data/README.md` (Spanish).
+
 | File | What | Source |
 |---|---|---|
 | `src/data/data_by_year.csv` | Per year, 2000 – June 2025: seizures containing each tiger part, part appearances, seizures and tigers seized (in / outside the tiger range), people jailed, wild tiger census, events | TRAFFIC, *Skin and Bones* (2022, 2025); Global Tiger Forum (2023) |

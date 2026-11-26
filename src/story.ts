@@ -16,7 +16,7 @@ import walk1 from './assets/walk/frame-01.svg?url';
 import walk2 from './assets/walk/frame-02.svg?url';
 import walk3 from './assets/walk/frame-03.svg?url';
 import walk4 from './assets/walk/frame-04.svg?url';
-import shotUrl from './assets/walk/tiger-shot.svg?url';
+import shotUrl from './assets/walk/tiger-shot.svg?url'; // the shot tiger, lying down (storyboard artwork)
 import splashUrl from './assets/ink-splash.svg?url';
 import { gunshot } from './sound';
 

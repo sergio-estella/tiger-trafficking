@@ -330,6 +330,8 @@ html, body { background: var(--pale); }
 .ch01 { position: absolute; inset: 0; pointer-events: none; }
 .walker { position: absolute; top: 0; left: 0; }
 .walker img { position: absolute; inset: 0; width: 100%; height: auto; }
+/* The shot tiger (lying down, 2172×724) sits on the same ground line as the walking one */
+.walker .walker__shot { inset: auto; left: -6%; bottom: 0; width: 112%; transform: scaleX(-1); } /* mirrored: it falls facing the way it walked */
 .walker__frame { visibility: hidden; }
 .splash { position: absolute; top: 0; left: 0; transform-origin: 50% 50%; }
 
