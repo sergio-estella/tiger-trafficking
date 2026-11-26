@@ -17,6 +17,7 @@ gsap.registerPlugin(ScrollToPlugin);
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GLIDE = reduced ? 0 : 0.7;      // seconds to travel between two stops
 const QUIET_MS = 180;                  // a wheel pause this long starts a new gesture
+const WHEEL_PX = 12;                   // distance a wheel/trackpad gesture needs to count
 const SWIPE_PX = 40;
 
 let gliding = false;
@@ -53,15 +54,30 @@ export function step(dir: 1 | -1, force = false) {
 }
 
 export function startStepper() {
-  // Wheel / trackpad: block native scrolling; a gesture starts after a quiet gap
-  let lastWheel = 0;
+  // Wheel / trackpad: block native scrolling and turn each gesture into one step.
+  // Trackpads start a gesture with tiny deltas (1–2 px) and keep sending
+  // decaying "momentum" events for a second or more after the fingers lift:
+  // - a gesture is armed after a quiet gap, and fires once its accumulated
+  //   distance passes a small threshold (so tiny first deltas still count);
+  // - momentum after it is ignored, unless the deltas jump up again (a new
+  //   flick during the momentum).
+  let last = 0, prevAbs = 0, acc = 0, armed = true;
   window.addEventListener('wheel', (e) => {
     if (menuOpen() || e.ctrlKey) return; // pinch-zoom stays native
     e.preventDefault();
     const now = performance.now();
-    const newGesture = now - lastWheel > QUIET_MS;
-    lastWheel = now;
-    if (newGesture && Math.abs(e.deltaY) > 2) step(e.deltaY > 0 ? 1 : -1);
+    const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1);
+    const abs = Math.abs(dy);
+    if (now - last > QUIET_MS) { armed = true; acc = 0; }
+    else if (!armed && abs > 25 && abs > prevAbs * 2.5) { armed = true; acc = 0; }
+    last = now;
+    prevAbs = abs;
+    if (!armed) return;
+    acc += dy;
+    if (Math.abs(acc) >= WHEEL_PX) {
+      armed = false;
+      step(acc > 0 ? 1 : -1);
+    }
   }, { passive: false });
 
   // Touch: one vertical swipe = one step; horizontal drags (the map) are left alone
