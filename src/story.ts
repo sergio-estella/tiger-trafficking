@@ -16,6 +16,7 @@ import walk3 from './assets/walk/frame-03.svg?url';
 import walk4 from './assets/walk/frame-04.svg?url';
 import shotUrl from './assets/walk/tiger-shot.svg?url';
 import splashUrl from './assets/ink-splash.svg?url';
+import { gunshot } from './sound';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const vh = () => window.innerHeight;
@@ -149,11 +150,11 @@ function buildPlaceholder(p: Placeholder): HTMLElement {
  *  in → ch01        scroll: zoom into the tiger's face until it disappears (4 → 8);
  *                   then "01.", the text and the menu button appear; waits on
  *                   "A century ago…" (9 → 10)
- *  ch01 → shot      scroll: the text moves up, the second paragraph comes in, the
- *                   tiger walks in from the left; an ink splash bursts on it, it
- *                   turns into its black-line version and the splash grows while
- *                   the text fades (11 → 13)
- *  shot → gone      scroll: splash and tiger go, the page is empty (14 → 15)
+ *  ch01 → walk      scroll: the text moves up, "Habitat loss…" comes in, the tiger
+ *                   walks in slowly from the left and stops; waits (11 → 12)
+ *  walk → gone      scroll: the shot, with sound; an ink splash bursts on it, it
+ *                   turns into its black-line version, the splash spreads while the
+ *                   text fades, then everything fades to the empty page (12 → 15)
  */
 function buildIntro(): HTMLElement {
   const section = html('section', 'scene intro');
@@ -210,13 +211,13 @@ function buildIntro(): HTMLElement {
   const D = reduced ? 0.01 : 1;
   const FPS = 12;
   const held = (t: number) => Math.floor(t * FPS + 1e-6) / FPS;
-  const WALK = 1.6;
+  const WALK = 2.6; // a slow walk in, then it stops
   const walkClock = { t: 0 };
   const renderWalk = () => {
     const tq = held(walkClock.t);
     const u = Math.min(1, tq / WALK);
     gsap.set(walker, { x: startX() + (endX() - startX()) * u, y: tigerTop(), width: tigerW(), height: tigerW() * 0.47 });
-    const f = Math.floor(tq * 8) % 4; // 4 drawings, 8 per second
+    const f = u >= 1 ? 0 : Math.floor(tq * 6) % 4; // 4 drawings, 6 per second; standing still once it arrives
     frames.forEach((img, i) => { img.style.visibility = i === f ? 'visible' : 'hidden'; });
   };
   // Splash: born on the tiger's shoulder (frame 12), then covers the centre (frame 13)
@@ -234,44 +235,43 @@ function buildIntro(): HTMLElement {
   if (menuBtn) gsap.set(menuBtn, { autoAlpha: 0 });
   renderWalk();
 
+  const hintFrom = () => -(vh() * 0.22); // the tab drops out of the title
   const tl = gsap.timeline({ paused: true });
   tl.addLabel('hidden')
     .fromTo(zoom, { opacity: 0 }, { opacity: 0.2, duration: reduced ? 0.01 : 0.35, ease: 'none' })   // frame 2
     .to(zoom, { opacity: 1, duration: reduced ? 0.01 : 0.6, ease: 'power1.out' })                    // frame 3
-    .fromTo(hint, { y: 67, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' })
+    .fromTo(hint, { y: hintFrom, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: 'power3.out' }, '-=0.15')
     .addLabel('in')
-    .to(hint, { y: 67, opacity: 0, duration: 0.2 }, 'in')
-    // 4 → 8: into the tiger's face until it disappears
-    .to(zoom, { scale: reduced ? 1 : 9, duration: 1.4 * D, ease: 'power2.in' }, 'in')
-    .fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.9 * D, ease: 'power1.in' }, `in+=${0.5 * D}`)
-    // 9 → 10: number, then text, then the menu button
-    .to(number, { autoAlpha: 1, duration: 0.3 }, `in+=${1.45 * D}`)
+    .to(hint, { y: 67, opacity: 0, duration: 0.15 }, 'in')
+    // 4 → 8: a small pull back (anticipation), then a fast zoom into the face
+    .to(zoom, { scale: reduced ? 1 : 0.9, duration: 0.22 * D, ease: 'power2.out' }, 'in')
+    .to(zoom, { scale: reduced ? 1 : 9, duration: 0.7 * D, ease: 'power4.in' }, `in+=${0.22 * D}`)
+    .fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.45 * D, ease: 'power2.in' }, `in+=${0.5 * D}`)
+    // 9 → 10: number, then text, then the menu button; waits on "…the estimate was about 5,600."
+    .to(number, { autoAlpha: 1, duration: 0.3 }, `in+=${1.0 * D}`)
     .fromTo(first, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out' }, '>-0.05')
     .to(menuBtn ?? {}, { autoAlpha: 1, duration: 0.4 }, '>')
     .addLabel('ch01')
-    // 10 → 11: text up, second paragraph in
+    // 10 → 12: text up, "Habitat loss…" in, the tiger walks in slowly and stops; waits
     .to(first, { y: -vh() * 0.6, autoAlpha: 0, duration: 0.45 * D, ease: 'power2.in' }, 'ch01')
-    .fromTo(second, { y: vh() * 0.4, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 * D, ease: 'power3.out' }, `ch01+=${0.4 * D}`) // after the first text has left
-    // 11 → 12: the tiger walks in
+    .fromTo(second, { y: vh() * 0.4, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 * D, ease: 'power3.out' }, `ch01+=${0.4 * D}`)
     .set(walker, { autoAlpha: 1 }, `ch01+=${0.6 * D}`)
     .to(walkClock, { t: WALK, duration: WALK * D, ease: 'none', onUpdate: renderWalk }, `ch01+=${0.6 * D}`)
-    // 12: the shot — splash bursts, the tiger turns into its black-line version
-    .addLabel('hit', `ch01+=${(0.6 + WALK) * D}`)
-    .call(renderSplash, [], 'hit')
-    .set(splash, { autoAlpha: 1 }, 'hit')
-    .fromTo(splash, { scale: 0.2 }, { scale: 1, duration: 0.17 * D, ease: `steps(2)` }, 'hit')
-    .set(frames, { autoAlpha: 0 }, 'hit')
-    .set(shot, { autoAlpha: 1 }, 'hit')
-    // 12 → 13: the splash spreads over the centre, the text fades
-    .fromTo(grow, { p: 0 }, { p: 1, duration: 0.6 * D, ease: 'power1.in', onUpdate: renderSplash }, `hit+=${0.35 * D}`)
-    .to(second, { autoAlpha: 0.25, duration: 0.5 * D }, `hit+=${0.35 * D}`)
-    .addLabel('shot')
-    // 14 → 15: everything goes, empty page
-    .to([walker, splash], { autoAlpha: 0, duration: 0.5 * D }, 'shot')
-    .to([second, number], { autoAlpha: 0, duration: 0.4 * D }, 'shot')
+    .addLabel('walk')
+    // 12 → 13: the shot (with sound) — splash bursts, the tiger turns into its black-line version,
+    // the splash spreads; then everything fades and only the background is left (14 → 15)
+    .call(gunshot, [], 'walk+=0.02') // just after the hold, so it fires on the next scroll
+    .call(renderSplash, [], 'walk+=0.02')
+    .set(splash, { autoAlpha: 1 }, 'walk+=0.02')
+    .fromTo(splash, { scale: 0.2 }, { scale: 1, duration: 0.17 * D, ease: 'steps(2)' }, 'walk+=0.02')
+    .set(frames, { autoAlpha: 0 }, 'walk+=0.02')
+    .set(shot, { autoAlpha: 1 }, 'walk+=0.02')
+    .fromTo(grow, { p: 0 }, { p: 1, duration: 0.6 * D, ease: 'power1.in', onUpdate: renderSplash }, `walk+=${0.3 * D}`)
+    .to(second, { autoAlpha: 0.25, duration: 0.5 * D }, `walk+=${0.3 * D}`)
+    .to([walker, splash, second, number], { autoAlpha: 0, duration: 0.7 * D }, `walk+=${1.3 * D}`)
     .addLabel('gone');
 
-  scenes.push({ section, tl, labels: ['hidden', 'in', 'ch01', 'shot', 'gone'], at: [-99, 0.15, 1.0, 1.9], index: 0, cutBackFrom: 3 });
+  scenes.push({ section, tl, labels: ['hidden', 'in', 'ch01', 'walk', 'gone'], at: [-99, 0.15, 1.0, 1.9], index: 0, cutBackFrom: 3 });
   return section;
 }
 

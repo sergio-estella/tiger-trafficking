@@ -282,7 +282,9 @@ html, body { background: var(--pale); }
 /* Intro (frames 1–8) */
 .intro__stage { background: var(--pale); color: var(--black); display: grid; place-items: center; }
 .intro__zoom { display: grid; place-items: center; transform-origin: 50% 47%; will-change: transform, opacity; }
-.intro__title { grid-area: 1 / 1; margin: 0; display: grid; justify-items: center; line-height: 0.82; letter-spacing: -0.02em; }
+.intro__title { grid-area: 1 / 1; margin: 0; display: grid; justify-items: center; letter-spacing: -0.02em; }
+.intro__title > span { display: block; line-height: 0.74; } /* tight leading: the two words almost touch, as in frame 3 */
+.intro__trafficking { margin-top: 0.04em; }
 .intro__tiger { font-size: min(33vw, 56vh); }         /* TIGER spans ~83% of the width, as in frame 3 */
 .intro__trafficking { font-size: min(14.2vw, 24vh); } /* TRAFFICKING ~80% of the width */
 /* The tiger head shows through the letters (frame 3: text used as a mask over the head) */
