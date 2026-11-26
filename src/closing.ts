@@ -18,6 +18,7 @@
  * - prefers-reduced-motion: fades only, no moving tigers.
  */
 import { gsap } from 'gsap';
+import { markBusy, registerStops } from './engine';
 // The tigers are drawn as images: their articulated rig (src/tigers.ts) is kept for later but no
 // longer animated, and an <img> is far cheaper to move and resize than a live SVG with clip paths.
 import frontalUrl from './assets/tigers/tigre-frontal-capas.svg?url';
@@ -292,10 +293,17 @@ export function createClosing(section: HTMLElement): ClosingApi {
     mapIn = section.offsetTop + vh() * MAP_IN_VH;
     trigger = mapIn + vh() * MAP_HOLD_VH;
   }
+  // Step model: the closing rests on chapter 07's text, on the map, and on the final sentence
+  registerStops(() => {
+    const top = section.offsetTop;
+    const m = top + vh() * MAP_IN_VH, t = m + vh() * MAP_HOLD_VH;
+    return [top, m + 2, t + 2];
+  });
 
   function play() {
     state = 'playing';
     tl!.timeScale(1).play();
+    markBusy(tl!.duration() - tl!.time()); // the whole jump plays before the next step
   }
 
   function rewind() {
@@ -307,6 +315,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
     state = 'map';
     tl!.pause().progress(0);
     gsap.fromTo(cover, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.35, ease: 'power1.out' });
+    markBusy(0.35);
     updateMapEntry();
     showHintSoon();
   }
@@ -337,6 +346,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
     const y = window.scrollY;
     if (!mapEntered && y >= mapIn) {
       mapEntered = true;
+      markBusy(0.5);
       gsap.to(map, { autoAlpha: 1, duration: 0.5, ease: 'power1.out', overwrite: true, onComplete: () => showHintSoon(0) });
       gsap.to(chapterNumber, { autoAlpha: 0, duration: 0.5, overwrite: true });
     } else if (mapEntered && (state === 'map' || state === 'rewinding') && y < mapIn - HYSTERESIS_PX) {

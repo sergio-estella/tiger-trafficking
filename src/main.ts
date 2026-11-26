@@ -7,6 +7,8 @@ import './styles.css';
 
 import { createMap } from './map';
 import { buildStory } from './story';
+import { startStepper } from './stepper';
+import { getStops, isBusy } from './engine';
 import { createClosing } from './closing';
 
 const closingSection = document.querySelector<HTMLElement>('#closing')!;
@@ -15,6 +17,8 @@ buildStory(closingSection);
 const map = createMap(closingSection.querySelector<HTMLElement>('.map')!);
 const closing = createClosing(closingSection);
 map.onInteract(() => closing.notifyInteraction());
+// One gesture = one step (see src/stepper.ts)
+startStepper();
 
 // Mobile: start with the map centred, so countries on both sides stay in view
 requestAnimationFrame(() => map.center());
@@ -28,3 +32,6 @@ menuBtn.addEventListener('click', openMenu);
 menu.querySelector('.menu-close')!.addEventListener('click', closeMenu);
 menu.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 menu.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', closeMenu));
+
+// ?debug exposes the step model to automated checks
+if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { __busy: isBusy, __stops: () => getStops().map((s) => s.y) });

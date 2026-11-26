@@ -239,6 +239,7 @@ export function buildFaces(): HTMLElement {
       // 25 → 27: the burst, then everything fades into the page colour (28)
       .call(() => { showPart(null); showYear(null); }, [], 'in+=0.01')
       .to(burst, { t: 1, duration: 1.1 * D, ease: 'none', onUpdate: renderBurst }, 'in+=0.01')
+      .to(rowG.querySelector('.faces__year-axis') ?? {}, { opacity: 0, duration: 0.3 }, 'in+=0.05')
       .to(yearGs, { y: vh() * 0.5, rotation: (i: number) => (i % 2 ? 25 : -25), opacity: 0, duration: 0.9 * D, ease: 'power2.in', stagger: 0.01 }, 'in+=0.05')
       .to(title, { x: -vw() * 0.3, y: vh() * 0.3, rotation: -18, opacity: 0, duration: 0.9 * D, ease: 'power2.in' }, 'in+=0.05')
       .to(section.querySelector('.faces__lede'), { opacity: 0, duration: 0.3 }, 'in+=0.05')
@@ -253,7 +254,7 @@ export function buildFaces(): HTMLElement {
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = window.setTimeout(build, 200); });
 
   registerScene({
-    section, get tl() { return tl; }, labels: ['hidden', 'in', 'out'], at: [-0.35, 1.0], cutBackFrom: 2,
+    section, get tl() { return tl; }, labels: ['hidden', 'in', 'out'], at: [-0.35, 1.0], cutBackFrom: 2, passAt: [1],
     onStep: (i) => { explorable = i === 1; stage.classList.toggle('is-explorable', explorable); if (!explorable) { showPart(null); showYear(null); } },
   } as Parameters<typeof registerScene>[0]);
   return section;

@@ -8,7 +8,7 @@
  * with the scroll position.
  */
 import { gsap } from 'gsap';
-import { registerScene, startEngine } from './engine';
+import { registerScene, registerStops, startEngine } from './engine';
 import { buildFaces } from './scenes/faces';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
 import headUrl from './assets/tiger-head.svg?url';
@@ -26,8 +26,8 @@ const vw = () => window.innerWidth;
 
 function offset(from: From) {
   switch (from) {
-    case 'right': return { x: vw() * 0.75, y: 0 };
-    case 'left': return { x: -vw() * 0.75, y: 0 };
+    case 'right': return { x: vw() * 1.15, y: 0 };  // far enough for long titles to leave the screen
+    case 'left': return { x: -vw() * 1.15, y: 0 };
     case 'below': return { x: 0, y: vh() * 0.45 };
     case 'above': return { x: 0, y: -vh() * 0.6 };
     default: return { x: 0, y: 0 };
@@ -97,12 +97,13 @@ function buildOpener(o: Opener): HTMLElement {
   if (leaving.length) tl.to(leaving, { y: -vh() * 0.6, opacity: 0, duration: D, ease: 'power2.in' }, labels[labels.length - 2]);
   tl.addLabel('out');
 
-  registerScene({ section, tl, labels, at });
+  registerScene({ section, tl, labels, at, passAt: [at.length - 1] }); // the exit carries on to the next section
   return section;
 }
 
 function buildPlaceholder(p: Placeholder): HTMLElement {
   const section = html('section', 'placeholder');
+  registerStops(() => [section.offsetTop]); // the step model rests on each placeholder too
   if (p.id) section.id = p.id;
   section.dataset.frames = p.frames;
   section.append(html('div', 'placeholder__box', `
@@ -240,7 +241,7 @@ function buildIntro(): HTMLElement {
     .to([walker, splash, second, number], { autoAlpha: 0, duration: 0.7 * D }, `walk+=${1.3 * D}`)
     .addLabel('gone');
 
-  registerScene({ section, tl, labels: ['hidden', 'in', 'ch01', 'walk', 'gone'], at: [-99, 0.15, 1.0, 1.9], cutBackFrom: 3 });
+  registerScene({ section, tl, labels: ['hidden', 'in', 'ch01', 'walk', 'gone'], at: [-99, 0.15, 1.0, 1.9], cutBackFrom: 3, passAt: [3] });
   return section;
 }
 

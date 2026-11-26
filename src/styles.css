@@ -26,7 +26,7 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html, body { margin: 0; background: var(--red); color: #fff; }
+html, body { margin: 0; background: var(--red); color: #fff; overscroll-behavior: none; }
 body { font-family: var(--display); font-stretch: 100%; -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; }
 

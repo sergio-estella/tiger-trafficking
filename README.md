@@ -27,6 +27,7 @@ npm run dev
 |---|---|
 | `src/content/chapters.ts` | Story order: chapter openers (copy, entrances/exits) and chart placeholders |
 | `src/story.ts` | Builds intro, openers and placeholders; stepped-scene engine (sticky stage, scroll thresholds → timeline labels) |
+| `src/stepper.ts` | Step model: one gesture (wheel flick, swipe, key) = one step to the next resting point; exits carry on to the next content; gestures ignored while a step plays |
 | `src/engine.ts` | Stepped-scene engine: sticky stage, scroll thresholds → timeline labels, cut-back for heavy steps |
 | `src/data/series.ts` + `src/data/*.csv` | Shared data layer (story and dashboard) |
 | `src/charts/faces.ts` | Tiger-head weighted Voronoi (reusable: story + dashboard) |

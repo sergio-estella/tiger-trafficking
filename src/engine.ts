@@ -21,10 +21,46 @@ export interface Stepped {
   started?: boolean;
   /** Called with the label index the scene is heading to */
   onStep?: (index: number) => void;
+  /** Thresholds (indexes into `at`) that are exits: the page does not rest there, it carries on */
+  passAt?: number[];
 }
 
 const scenes: Stepped[] = [];
 const vh = () => window.innerHeight;
+
+// ------------------------------------------------------------------ busy (step model)
+// While a step's animation plays, the stepper ignores new gestures.
+let busyUntil = 0;
+export function markBusy(seconds: number) {
+  busyUntil = Math.max(busyUntil, performance.now() + seconds * 1000);
+}
+export const isBusy = () => performance.now() < busyUntil;
+
+// ------------------------------------------------------------------ stops
+// Scroll positions where the page rests: one per scene step, plus the ones other
+// modules register (the closing, plain sections).
+export interface Stop { y: number; pass: boolean }
+const extraStops: Array<() => number[]> = [];
+export function registerStops(fn: () => number[]) { extraStops.push(fn); }
+/**
+ * Resting points, in order. A `pass` stop is an exit (a text leaving, a burst):
+ * the stepper goes there, lets the animation play, then carries on by itself.
+ */
+export function getStops(): Stop[] {
+  const out = new Map<number, boolean>();
+  const max = document.documentElement.scrollHeight - vh();
+  const add = (v: number, pass: boolean) => {
+    const y = Math.max(0, Math.min(max, Math.round(v)));
+    out.set(y, (out.get(y) ?? true) && pass); // a real stop wins over a pass at the same place
+  };
+  for (const s of scenes) {
+    const top = s.section.offsetTop;
+    add(top, false);
+    s.at.forEach((a, i) => { if (a >= 0) add(top + a * vh() + 2, s.passAt?.includes(i) ?? false); });
+  }
+  for (const f of extraStops) for (const v of f()) add(v, false);
+  return [...out].map(([y, pass]) => ({ y, pass })).sort((a, b) => a.y - b.y);
+}
 
 export function registerScene(s: Omit<Stepped, 'index'>) {
   // same object (not a copy): scenes may expose `tl` through a getter and rebuild it on resize
@@ -49,7 +85,10 @@ export function updateScenes() {
     s.onStep?.(index);
     s.tween?.kill();
     if (cut) s.tl.pause().seek(s.labels[index]);
-    else s.tween = s.tl.tweenTo(s.labels[index], { ease: 'none' });
+    else {
+      s.tween = s.tl.tweenTo(s.labels[index], { ease: 'none' });
+      markBusy(s.tween.duration());
+    }
   }
 }
 

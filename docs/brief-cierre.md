@@ -21,6 +21,10 @@ Total: ~5,4 s (rebobinado al doble: ~2,7 s).
 
 Tipografía de la frase: 82 px a 1440×900 (antes 100 px, −18 %), escala con el ancho y el alto de la ventana; 66 px a 440 px de ancho en móvil (antes 80 px).
 
+## Modelo de scroll (desde el 26/11)
+
+La página avanza por pasos: cada gesto (un golpe de rueda o de trackpad, un deslizamiento con el dedo, una flecha o la barra espaciadora) lleva al siguiente punto de parada, y la animación de ese paso se reproduce entera. Mientras se reproduce, los gestos se ignoran; la inercia del trackpad no cuenta como gesto nuevo. Las salidas (textos que se van, la explosión de las caras) no son paradas: la página sigue sola hasta el contenido siguiente. Hacia atrás, un gesto es un paso atrás. Ver `src/stepper.ts`.
+
 ## Disparo y scroll
 
 - Un único umbral al final del mapa lanza los ~3 s seguidos. La animación va por tiempo; el scroll no mueve fotogramas.
