@@ -34,7 +34,7 @@ export interface Placeholder {
 }
 
 /** A built chart scene (see src/scenes/) */
-export interface Built { kind: 'faces'; frames: string }
+export interface Built { kind: 'faces' | 'clock' | 'years'; frames: string }
 
 export type Section = Opener | Placeholder | Built;
 
@@ -53,8 +53,8 @@ export const story: Section[] = [
     body: 'In 2016, authorities recorded <strong>135 seizures involving 320 tigers</strong>. A year later, they recorded <strong>120 seizures involving 126 tigers</strong>.',
     enter: { title: 'left', body: 'right' }, exit: { title: 'right', body: 'left' },
   },
-  { kind: 'placeholder', number: '03.', frames: '35–41', title: 'Seizures, 2000–2025 (radial)', note: 'Every seizure in tiger range countries' },
-  { kind: 'placeholder', number: '03.', frames: '42–49', title: 'Year by year: seizures rose, tigers seized peaked in 2016', note: 'Bars per year' },
+  { kind: 'clock', frames: '35–41' },
+  { kind: 'years', frames: '42–49' },
   {
     kind: 'opener', id: 'ch04', number: '04.', frames: '50–56', theme: 'pale',
     title: 'What is trafficked',

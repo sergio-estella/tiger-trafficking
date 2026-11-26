@@ -73,6 +73,18 @@ export interface YearRow {
   parts: Record<PartKey, number>; // seizures containing each part
   partTotal: number;           // part appearances
   event: string;
+  seizuresRange: number | null;
+  seizuresOutside: number | null;
+  pctOutside: number | null;
+  tigersTotal: number | null;
+  tigersRange: number | null;    // 2025: split not available
+  tigersOutside: number | null;
+  pctDead: number | null;        // % of seizures with dead tigers
+  pctLive: number | null;        // % of seizures with live tigers
+  pctTrophy: number | null;      // skins + bones, % of part records
+  pctAmulet: number | null;      // claws + teeth, % of part records
+  jailed: number | null;         // people jailed, tiger range countries (2000–2021)
+  wildCensus: number | null;     // wild tigers, census years only
 }
 
 const derived = new Map(parseCsv(derivedCsv).map((r) => [Number(r.year), r]));
@@ -88,6 +100,18 @@ export const years: YearRow[] = parseCsv(byYearCsv).map((r) => {
     parts,
     partTotal: Number(r.part_appearances_total),
     event: r.event,
+    seizuresRange: num(d?.seizures_tiger_range ?? ''),
+    seizuresOutside: num(d?.seizures_outside_range ?? ''),
+    pctOutside: num(d?.pct_seizures_outside ?? ''),
+    tigersTotal: num(d?.tigers_seized_total ?? ''),
+    tigersRange: num(d?.tigers_seized_tiger_range ?? ''),
+    tigersOutside: num(d?.tigers_seized_outside_range ?? ''),
+    pctDead: num(d?.pct_seizures_with_dead_tigers ?? ''),
+    pctLive: num(d?.pct_seizures_with_live_tigers ?? ''),
+    pctTrophy: num(d?.pct_part_records_trophy_skins_bones ?? ''),
+    pctAmulet: num(d?.pct_part_records_amulet_claws_teeth ?? ''),
+    jailed: num(d?.people_jailed_tiger_range ?? ''),
+    wildCensus: num(r.wild_tigers_census),
   };
 });
 
@@ -97,3 +121,23 @@ export const partTotals = Object.fromEntries(
 ) as Record<PartKey, number>;
 
 export const pct = (v: number, total: number) => (total ? Math.round((v / total) * 100) : 0);
+
+/** Story colours for the yearly charts (storyboard frames 39 and 42) */
+export const YEAR_COLORS = {
+  seizures: '#e2560c',
+  tigers: '#9e220a',
+  outside: '#ffffff',
+  dead: '#111111',
+  live: '#9c9c9c',     // hatched where space allows
+  trophy: '#e2560c',
+  amulet: '#741505',
+  jailed: '#0b5a50',
+  wild: '#24520f',
+  event: '#ffdd03',
+  eventText: '#8a1c06',
+};
+
+/** Events marked across the yearly charts */
+export const EVENTS: Record<number, string> = Object.fromEntries(
+  years.filter((y) => y.event).map((y) => [y.year, y.event]),
+);

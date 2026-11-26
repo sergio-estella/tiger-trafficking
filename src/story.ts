@@ -10,6 +10,8 @@
 import { gsap } from 'gsap';
 import { registerScene, registerStops, startEngine } from './engine';
 import { buildFaces } from './scenes/faces';
+import { buildClock } from './scenes/clock';
+import { buildYears } from './scenes/years';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
 import headUrl from './assets/tiger-head.svg?url';
 import walk1 from './assets/walk/frame-01.svg?url';
@@ -253,7 +255,9 @@ export function buildStory(before: HTMLElement) {
   for (const s of story) {
     if (s.kind === 'opener') frag.append(buildOpener(s));
     else if (s.kind === 'faces') frag.append(buildFaces());
-    else frag.append(buildPlaceholder(s));
+    else if (s.kind === 'clock') frag.append(buildClock());
+    else if (s.kind === 'years') frag.append(buildYears());
+    else frag.append(buildPlaceholder(s as Placeholder));
   }
   before.before(frag);
 

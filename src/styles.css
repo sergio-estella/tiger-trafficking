@@ -369,3 +369,80 @@ html, body { background: var(--pale); }
   .face-label--left { flex-direction: row; text-align: left; }
   .faces__note { white-space: normal; max-width: 88vw; }
 }
+
+/* ================================================================== 03 · The trafficking clock (frames 35–41) */
+.clock__stage { background: var(--pale); color: var(--black); }
+.clock__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.clock__outside { stroke: #111; stroke-width: 0.6; }
+.clock__partial { stroke: #111; stroke-width: 0.8; stroke-dasharray: 2 2; }
+.clock__event { fill: var(--yellow); fill-opacity: 0.45; }
+.clock__event-label { font: 700 14px var(--body); fill: #8a1c06; }
+.clock__label { font: 400 11px var(--body); fill: #111; }
+.clock__jailed { font: 700 10px var(--body); fill: #fff; }
+.clock__wild { fill: none; stroke: #24520f; stroke-width: 1.4; stroke-dasharray: 4 3; }
+.clock__wild-label { font: 700 10.5px var(--body); fill: #24520f; paint-order: stroke; stroke: var(--yellow); stroke-width: 3; }
+.clock__ring-name { font: 700 10.5px var(--body); paint-order: stroke; stroke: var(--yellow); stroke-width: 3; }
+.clock__title { font: 700 18px var(--slab); fill: #111; }
+.clock__sub { font: 400 9px var(--body); fill: #3d3320; }
+.clock__ann { font: 400 15px var(--body); fill: #111; }
+.clock__hit { fill: transparent; outline: none; }
+.is-explorable .clock__hit { cursor: pointer; }
+.clock__highlight { fill: none; stroke: #111; stroke-width: 2.5; pointer-events: none; }
+.clock__legend { position: absolute; left: 74.5vw; top: 33vh; margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font: 400 13px/1.3 var(--body); transition: opacity 0.2s; }
+.clock__legend.is-dim { opacity: 0.25; }
+.clock__legend li { display: flex; gap: 8px; align-items: center; }
+.clock__sw { width: 16px; height: 12px; flex: none; background: var(--c); border: 1px solid #111; }
+.clock__sw--box[style*="#fff"] { background: #fff; }
+.clock__sw--dot { width: 10px; height: 10px; border-radius: 50%; border: 0; margin: 0 3px; }
+.clock__sw--dash { height: 0; border: 0; border-top: 2px dashed var(--c); }
+.clock__sw[style*="hatch"] { background: repeating-linear-gradient(45deg, #111 0 2px, #fff 2px 4px); }
+.clock__note { position: absolute; left: 74.5vw; top: calc(33vh + 300px); margin: 0; max-width: 300px; font: 400 12.5px/1.35 var(--body); color: #3d3320; }
+.clock-card { position: absolute; left: 74.5vw; top: 33vh; width: 300px; padding: 14px 16px; background: var(--black); color: #fff; font: 400 13px/1.35 var(--body); pointer-events: none; }
+.clock-card__year { display: block; font: 400 32px/1 var(--card-title); color: var(--yellow); margin-bottom: 8px; }
+.clock-card__year small { font: 400 13px var(--body); color: var(--sand); }
+.clock-card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+.clock-card dt { color: var(--sand); }
+.clock-card dd { margin: 0; }
+.clock-card small { color: var(--sand); }
+.clock-card__event { margin: 10px 0 0; color: var(--yellow); font-weight: 700; }
+
+/* ================================================================== 03 · Year by year (frames 42–49) */
+.years__stage { background: var(--pale); color: var(--black); }
+.years__head { position: absolute; left: 11vw; right: 11vw; top: 9vh; }
+.years__title { margin: 0; font: 700 clamp(24px, 2.95vw, 44px)/1.1 var(--slab); }
+.years__lede { margin: 8px 0 0; max-width: 46em; font: 400 clamp(15px, 1.4vw, 20px)/1.4 var(--body); }
+.years__legend { margin: 18px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 22px; font: 400 14px var(--body); }
+.years__legend li { display: flex; gap: 6px; align-items: center; }
+.years__legend span { width: 14px; height: 14px; background: var(--c); border: 1px solid #111; }
+.years__legend .is-outside { background: #fff; }
+.years__legend .is-hatch { background: repeating-linear-gradient(45deg, #111 0 2px, #fff 2px 4px); }
+.years__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.years__bar { stroke: #111; stroke-width: 0.8; }
+.years__bar.is-partial { stroke-dasharray: 3 2; fill-opacity: 0.6; }
+.years__event { fill: var(--yellow); fill-opacity: 0.35; }
+.years__event-label { font: 700 13px var(--body); fill: #111; }
+.years__chart-title { font: 700 20px var(--slab); fill: #111; }
+.years__chart-title--small { font-size: 17px; }
+.years__chart-note { font: 400 13px var(--body); fill: #3b321c; }
+.years__grid { stroke: #111; stroke-opacity: 0.15; }
+.years__base { stroke: #111; }
+.years__tick, .years__year { font: 400 12px 'Roboto Mono', ui-monospace, monospace; fill: #111; }
+.years__value { font: 700 13px 'Roboto Mono', ui-monospace, monospace; fill: #111; }
+.years__cell { font: 400 11px 'Roboto Mono', ui-monospace, monospace; }
+.years__ann { font: 700 14px var(--body); fill: #111; }
+.years__hit { fill: transparent; outline: none; }
+.is-explorable .years__hit { cursor: pointer; }
+.years__tip { position: absolute; padding: 6px 10px; background: var(--black); color: #fff; font: 400 13px var(--body); white-space: nowrap; pointer-events: none; }
+.years__tip strong { color: var(--yellow); margin-right: 6px; }
+
+@media (max-width: 700px) and (orientation: portrait) {
+  .clock__legend { left: 6vw; right: 6vw; top: auto; bottom: 4vh; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 10.5px; }
+  .clock__note { display: none; }
+  .clock-card { left: 6vw; right: 6vw; top: auto; bottom: 4vh; width: auto; }
+  .clock__event-label, .clock__ann { font-size: 11px; }
+  .years__head { left: 6vw; right: 6vw; top: 9vh; }
+  .years__lede { font-size: 13px; }
+  .years__legend { gap: 4px 12px; font-size: 11px; }
+  .years__chart-title { font-size: 15px; }
+  .years__tip { white-space: normal; max-width: 88vw; }
+}
