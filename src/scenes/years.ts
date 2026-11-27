@@ -67,18 +67,22 @@ export function buildYears(): HTMLElement {
       </header>
       <svg class="years__svg" aria-hidden="true"></svg>
       <div class="years__tip" hidden></div>
+      <svg class="years__wipe" aria-hidden="true"><path fill-rule="evenodd" /></svg>
     </div>`;
   const stage = section.querySelector<HTMLElement>('.years__stage')!;
   const head = section.querySelector<HTMLElement>('.years__head')!;
   const svg = section.querySelector<SVGSVGElement>('.years__svg')!;
   const tip = section.querySelector<HTMLElement>('.years__tip')!;
+  // the transition object: a circle that grows from the centre and covers the chart,
+  // then opens from its own centre on the next state (drawn as a ring, even-odd)
+  const wipe = section.querySelector<SVGPathElement>('.years__wipe path')!;
 
   let state: StateKey = 'seizures';
   let explorable = false;
   const bars: { g: SVGGElement; b: SVGRectElement; t: SVGRectElement; x: number; w: number }[] = [];
   let geom = { x0: 0, x1: 0, y0: 0, y1: 0, band: 0 };
   const layers: Record<StateKey, SVGGElement> = {} as Record<StateKey, SVGGElement>;
-  let strip: SVGGElement, events: SVGGElement, axisX: SVGGElement;
+  let strip: SVGGElement, events: SVGGElement, axisX: SVGGElement, barsGroup: SVGGElement;
 
   const yScale = (s: StateKey, v: number) => geom.y1 - (Math.min(v, STATES[s].max) / STATES[s].max) * (geom.y1 - geom.y0);
   const barAttrs = (s: StateKey, i: number) => {
@@ -150,6 +154,7 @@ export function buildYears(): HTMLElement {
     // Bars (two per year: bottom + top), reused by every state
     const barsG = svgEl('g', { class: 'years__bars' });
     svg.append(barsG);
+    barsGroup = barsG;
     years.forEach((y, i) => {
       const w = geom.band * 0.62, x = geom.x0 + geom.band * i + (geom.band - w) / 2;
       const b = svgEl('rect', { x, width: w, class: 'years__bar' });
@@ -238,21 +243,44 @@ export function buildYears(): HTMLElement {
       height: (i: number) => barAttrs(s, i)[part].height,
       fill: (i: number) => barAttrs(s, i)[part].fill,
     });
-    const scatter = bars.map((_, i) => ({
-      x: (((i * 73) % 21) - 10) * vw() * 0.035, y: (((i * 41) % 17) - 8) * vh() * 0.06, r: (i % 2 ? 1 : -1) * (15 + ((i * 29) % 60)),
-    }));
     const bs = bars.map((b) => b.b), ts = bars.map((b) => b.t);
-    // Scatter written by hand on each column group: no transform-origin bookkeeping,
-    // so the columns always land exactly where they were (12 drawings per second)
+    // Every bar is two pieces (bottom + top); each flies on its own path
+    const pieces = bars.flatMap((c, i) => [c.b, c.t].map((el, k) => {
+      const j = i * 2 + k;
+      return {
+        el, x: (((j * 73) % 23) - 11) * vw() * 0.032, y: (((j * 41) % 19) - 9) * vh() * 0.055,
+        r: (j % 2 ? 1 : -1) * (20 + ((j * 29) % 70)),
+      };
+    }));
+    // Written by hand (no transform-origin bookkeeping: the pieces land exactly), 12 drawings per second.
+    // p: 0 = assembled, 1 = scattered; k: how far; z: camera zoom on the whole chart
     const fly = { p: 0, k: 1, z: 1 };
+    const cx0 = (geom.x0 + geom.x1) / 2, cy0 = (geom.y0 + geom.y1) / 2;
     const renderFly = () => {
       const p = Math.round(fly.p * FPS) / FPS;
-      bars.forEach((c, i) => {
-        if (p === 0 && fly.z === 1) { c.g.removeAttribute('transform'); return; }
-        const cx = c.x + c.w / 2, cy = geom.y1;
-        const f = scatter[i];
-        c.g.setAttribute('transform', `translate(${f.x * fly.k * p} ${f.y * fly.k * p}) rotate(${f.r * fly.k * p} ${cx} ${cy}) translate(${cx} ${cy}) scale(${1 + (fly.z - 1) * p}) translate(${-cx} ${-cy})`);
-      });
+      for (const f of pieces) {
+        if (p === 0) { f.el.removeAttribute('transform'); continue; }
+        const x = Number(f.el.getAttribute('x')) + Number(f.el.getAttribute('width')) / 2;
+        const y = Number(f.el.getAttribute('y')) + Number(f.el.getAttribute('height')) / 2;
+        f.el.setAttribute('transform', `translate(${f.x * fly.k * p} ${f.y * fly.k * p}) rotate(${f.r * Math.min(fly.k, 2) * p} ${x} ${y})`);
+      }
+      const z = 1 + (fly.z - 1) * p;
+      if (z === 1) barsGroup.removeAttribute('transform');
+      else barsGroup.setAttribute('transform', `translate(${cx0} ${cy0}) scale(${z}) translate(${-cx0} ${-cy0})`);
+    };
+    const W = vw(), H = vh(), RMAX = Math.hypot(W, H) / 2 + 10;
+    const wp = { o: 0, i: 0 };
+    const circle = (r: number) => `M${W / 2 - r},${H / 2}a${r},${r} 0 1,0 ${r * 2},0a${r},${r} 0 1,0 ${-r * 2},0Z`;
+    const renderWipe = () => {
+      const o = Math.round(wp.o * 6) / 6, n = Math.round(wp.i * 6) / 6; // 6 sizes each way: comic steps
+      wipe.setAttribute('d', o <= 0 || n >= 1 ? '' : circle(o * RMAX) + (n > 0 ? circle(n * RMAX) : ''));
+    };
+    // close at `at`, swap the chart under the circle, open again
+    const transition = (label: string, swap: (t: gsap.core.Timeline, pos: number) => void) => {
+      const at = tl.labels[label] + 0.01;
+      tl.fromTo(wp, { o: 0, i: 0 }, { o: 1, i: 0, duration: 0.4 * D, ease: 'power2.in', onUpdate: renderWipe, immediateRender: false }, at);
+      swap(tl, at + 0.42 * D);
+      tl.to(wp, { i: 1, duration: 0.45 * D, ease: 'power2.out', onUpdate: renderWipe }, at + 0.5 * D);
     };
     for (const s of ORDER) gsap.set(layers[s], { opacity: 0 });
     tl = gsap.timeline({ paused: true });
@@ -260,33 +288,34 @@ export function buildYears(): HTMLElement {
       .from(head, { y: 40, opacity: 0, duration: 0.5 * D, ease: 'power2.out' }, 0)
       .fromTo(layers.seizures, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.2 * D)
       .from([axisX, events], { opacity: 0, duration: 0.3 }, 0.2 * D)
-      // 42: bars rise, year by year
-      .from(bs, { attr: { y: geom.y1, height: 0 }, duration: 0.35 * D, stagger: 0.03, ease: 'steps(4)' }, 0.3 * D)
-      .from(ts, { attr: { y: ((i: number) => barAttrs('seizures', i).b.y) as unknown as number, height: 0 }, duration: 0.3 * D, stagger: 0.03, ease: 'steps(3)' }, 0.5 * D)
-      .from(strip, { opacity: 0, y: 20, duration: 0.4 * D }, 1.2 * D)
-      .addLabel('seizures')
-      // 43: the same bars become tigers seized
-      .call(() => { state = 'tigers'; showTip(null); }, [], 'seizures+=0.01')
-      .to(strip, { opacity: 0, duration: 0.3 * D }, 'seizures+=0.01')
-      .to(layers.seizures, { opacity: 0, duration: 0.25 }, 'seizures+=0.01')
-      .to(bs, { attr: toAttrs('tigers')('b') as unknown as gsap.AttrVars, duration: 0.7 * D, ease: `steps(${Math.round(0.7 * FPS)})`, stagger: 0.01 }, 'seizures+=0.05')
-      .to(ts, { attr: toAttrs('tigers')('t') as unknown as gsap.AttrVars, duration: 0.7 * D, ease: `steps(${Math.round(0.7 * FPS)})`, stagger: 0.01 }, 'seizures+=0.05')
-      .to(layers.tigers, { opacity: 1, duration: 0.3 }, 'seizures+=0.5')
-      .addLabel('tigers')
-      // 44 → 46: the bars scatter and land as whole animals
-      .call(() => { state = 'whole'; showTip(null); }, [], 'tigers+=0.01')
-      .to(layers.tigers, { opacity: 0, duration: 0.25 }, 'tigers+=0.01')
-      .fromTo(fly, { p: 0, k: 1, z: 1 }, { p: 1, duration: 0.5 * D, ease: 'none', onUpdate: renderFly }, 'tigers+=0.05')
-      .set(bs, { attr: toAttrs('whole')('b') as unknown as gsap.AttrVars }, `tigers+=${0.55 * D}`)
-      .set(ts, { attr: toAttrs('whole')('t') as unknown as gsap.AttrVars }, `tigers+=${0.55 * D}`)
-      .to(fly, { p: 0, duration: 0.6 * D, ease: 'none', onUpdate: renderFly }, `tigers+=${0.6 * D}`)
-      .to(layers.whole, { opacity: 1, duration: 0.3 }, `tigers+=${1.1 * D}`)
-      .addLabel('whole')
-      // 47 → 49: scatter, zoom, out
+      // 42: the bars come in from outside, in pieces, and the chart puts itself together
+      .fromTo(fly, { p: 1, k: 3.2, z: 1 }, { p: 0, duration: 0.85 * D, ease: 'power3.out', onUpdate: renderFly, immediateRender: true }, 0.15 * D)
+      .from(strip, { opacity: 0, y: 20, duration: 0.4 * D }, 1.0 * D)
+      .addLabel('seizures');
+    // 43: a circle closes over the chart; it opens on tigers seized
+    tl.call(() => { state = 'tigers'; showTip(null); }, [], 'seizures+=0.01');
+    transition('seizures', (t, at) => {
+      t.set(strip, { opacity: 0 }, at)
+        .set(layers.seizures, { opacity: 0 }, at)
+        .set(bs, { attr: toAttrs('tigers')('b') as unknown as gsap.AttrVars }, at)
+        .set(ts, { attr: toAttrs('tigers')('t') as unknown as gsap.AttrVars }, at)
+        .set(layers.tigers, { opacity: 1 }, at);
+    });
+    tl.addLabel('tigers');
+    // 44 → 46: again, onto seizures with whole animals
+    tl.call(() => { state = 'whole'; showTip(null); }, [], 'tigers+=0.01');
+    transition('tigers', (t, at) => {
+      t.set(layers.tigers, { opacity: 0 }, at)
+        .set(bs, { attr: toAttrs('whole')('b') as unknown as gsap.AttrVars }, at)
+        .set(ts, { attr: toAttrs('whole')('t') as unknown as gsap.AttrVars }, at)
+        .set(layers.whole, { opacity: 1 }, at);
+    });
+    tl.addLabel('whole')
+      // 47 → 49: it blows apart — fast, and the camera rushes into the pieces (like the head)
       .call(() => showTip(null), [], 'whole+=0.01')
-      .fromTo(fly, { p: 0, k: 3, z: 2.2 }, { p: 1, duration: 0.9 * D, ease: 'none', onUpdate: renderFly, immediateRender: false }, 'whole+=0.01')
-      .to([layers.whole, axisX, events, head], { opacity: 0, duration: 0.5 * D }, 'whole+=0.01')
-      .to([...bs, ...ts], { opacity: 0, duration: 0.3 * D }, `whole+=${0.75 * D}`)
+      .fromTo(fly, { p: 0, k: 0.8, z: 3.6 }, { p: 1, duration: 0.8 * D, ease: 'power2.out', onUpdate: renderFly, immediateRender: false }, 'whole+=0.01')
+      .to([layers.whole, axisX, events, head], { opacity: 0, duration: 0.2 * D }, 'whole+=0.01')
+      .to([...bs, ...ts], { opacity: 0, duration: 0.25 * D, ease: 'power2.in' }, `whole+=${0.6 * D}`)
       .addLabel('out');
     tl.progress(progress);
   }

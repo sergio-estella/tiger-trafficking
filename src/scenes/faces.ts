@@ -53,9 +53,9 @@ export function buildFaces(): HTMLElement {
   let cells: Cell[] = [];
   let paths = new Map<PartKey, SVGPathElement>();
   let big: DrawnHead;
-  let riseG: SVGGElement, headG: SVGGElement, leader: SVGGElement, rowG: SVGGElement;
+  let riseG: SVGGElement, headG: SVGGElement, leader: SVGGElement, rowG: SVGGElement, yearLeader: SVGPolylineElement;
   const labelEls = new Map<PartKey, HTMLElement>();
-  const yearEls: { g: SVGGElement; box: SVGRectElement; label: SVGTextElement; year: (typeof years)[number]; cx: number; bottom: number }[] = [];
+  const yearEls: { g: SVGGElement; box: SVGRectElement; label: SVGTextElement; year: (typeof years)[number]; cx: number; bottom: number; top: number }[] = [];
 
   function layout() {
     svg.innerHTML = '';
@@ -68,9 +68,9 @@ export function buildFaces(): HTMLElement {
     svg.append(hatchDefs('face-hatch-legend', 4));
 
     // Big head (frame 24: ~400 px wide on 1440×900, centred, upper half)
-    headW = portrait() ? Math.min(W * 0.72, H * 0.38) : Math.min(H * 0.44, W * 0.3);
+    headW = portrait() ? Math.min(W * 0.72, H * 0.38) : Math.min(H * 0.42, W * 0.3);
     headX = W / 2 - headW / 2;
-    headY = portrait() ? H * 0.25 : H * 0.17;
+    headY = portrait() ? H * 0.25 : (H - headW * HEAD_ASPECT) / 2; // centred in the height (desktop)
     cells = voronoiHead(partTotals, headW, 11);
     headG = svgEl('g', { class: 'faces__head' });
     headG.setAttribute('transform', `translate(${headX} ${headY})`);
@@ -106,14 +106,15 @@ export function buildFaces(): HTMLElement {
 
     // Year heads: head area ∝ seizures that year; 2025 (Jan–Jun) dashed
     rowG = svgEl('g', { class: 'faces__row' });
-    svg.append(rowG);
+    yearLeader = svgEl('polyline', { class: 'faces__leader-line faces__year-leader', points: '' });
+    svg.append(rowG, yearLeader);
     const maxS = Math.max(...years.map((y) => y.seizures));
     const perRow = portrait() ? 13 : years.length;
     const rows = Math.ceil(years.length / perRow);
     const x0 = portrait() ? W * 0.06 : W * 0.12, x1 = portrait() ? W * 0.94 : W * 0.86;
     const step = (x1 - x0) / perRow;
     const maxW = Math.min(step * 0.95, portrait() ? 30 : 46);
-    const rowBottom = (r: number) => (portrait() ? H * 0.74 + r * (maxW * 1.9) : H * 0.83);
+    const rowBottom = (r: number) => (portrait() ? H * 0.78 + r * (maxW * 1.9) : H * 0.91);
     if (!portrait()) {
       const t = svgEl('text', { x: x0 - 14, y: rowBottom(0) + 18, class: 'faces__year-axis', 'text-anchor': 'end' });
       t.textContent = 'year';
@@ -128,13 +129,14 @@ export function buildFaces(): HTMLElement {
       const head = svgEl('g');
       head.setAttribute('transform', `translate(${cx - w / 2} ${bottom - w * HEAD_ASPECT})`);
       drawHead(head, voronoiHead(y.parts, w, y.year), w, { hatchId: 'face-hatch', stroke: 1, dashed: y.partial });
-      const box = svgEl('rect', { x: cx - step * 0.45, y: bottom + 4, width: step * 0.9, height: 20, class: 'faces__year-box' });
+      const boxTop = bottom - maxW * HEAD_ASPECT - 6;
+      const box = svgEl('rect', { x: cx - step * 0.47, y: boxTop, width: step * 0.94, height: bottom + 26 - boxTop, class: 'faces__year-box' });
       const label = svgEl('text', { x: cx, y: bottom + 18, 'text-anchor': 'middle', class: 'faces__year-label' });
       label.textContent = String(y.year).slice(2);
       const hit = svgEl('rect', { x: cx - step / 2, y: bottom - maxW * HEAD_ASPECT - 6, width: step, height: maxW * HEAD_ASPECT + 32, fill: 'transparent' });
-      g.append(hit, head, box, label);
+      g.append(hit, box, head, label);
       rowG.append(g);
-      yearEls.push({ g, box, label, year: y, cx, bottom });
+      yearEls.push({ g, box, label, year: y, cx, bottom, top: boxTop });
     });
     bindHover();
   }
@@ -168,15 +170,21 @@ export function buildFaces(): HTMLElement {
   function showYear(year: number | null) {
     activeYear = year;
     for (const y of yearEls) y.g.classList.toggle('is-on', y.year.year === year);
-    if (year === null) { note.hidden = true; return; }
+    if (year === null) { note.hidden = true; yearLeader.setAttribute('points', ''); return; }
     const y = yearEls.find((e) => e.year.year === year)!;
     const d = y.year;
     const ct = d.parts.Claws + d.parts.Teeth;
     note.innerHTML = `<strong>${d.year}${d.partial ? ' (Jan–Jun)' : ''}:</strong> skins ${pct(d.parts.Skins, d.partTotal)}% of part records;<br />live tigers ${pct(d.parts.Live_tigers, d.partTotal)}%, claws + teeth ${pct(ct, d.partTotal)}% · ${fmt.format(d.seizures)} seizures`;
     note.hidden = false;
-    const w = note.offsetWidth;
-    note.style.left = `${Math.min(vw() - w - 12, Math.max(12, y.cx - w / 2))}px`;
-    note.style.top = `${y.bottom + 32}px`;
+    // the line leaves the top of the white box, goes up and turns towards the text
+    const w = note.offsetWidth, h = note.offsetHeight;
+    const toRight = y.cx < vw() / 2;
+    const lineY = Math.min(...yearEls.map((e) => e.top)) - 22; // where the line turns: above the (first) row
+    const textX = toRight ? y.cx + 14 : y.cx - 14 - w;
+    note.classList.toggle('faces__note--left', !toRight);
+    note.style.left = `${Math.min(vw() - w - 12, Math.max(12, textX))}px`;
+    note.style.top = `${lineY - h / 2}px`;
+    yearLeader.setAttribute('points', `${y.cx},${y.top} ${y.cx},${lineY} ${y.cx + (toRight ? 9 : -9)},${lineY}`);
   }
 
   function bindHover() {
@@ -189,7 +197,10 @@ export function buildFaces(): HTMLElement {
       const yr = y.year.year;
       y.g.addEventListener('pointerenter', (e) => { if (explorable && e.pointerType === 'mouse') showYear(yr); });
       y.g.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') showYear(null); });
-      y.g.addEventListener('click', () => { if (explorable) showYear(activeYear === yr ? null : yr); });
+      // a tap also focuses the head: remember whether it was open before the tap
+      let wasOn = false;
+      y.g.addEventListener('pointerdown', () => { wasOn = activeYear === yr; });
+      y.g.addEventListener('click', () => { if (explorable) showYear(wasOn ? null : yr); wasOn = activeYear === yr; });
       y.g.addEventListener('focus', () => { if (explorable) showYear(yr); });
       y.g.addEventListener('blur', () => showYear(null));
     }
@@ -212,19 +223,24 @@ export function buildFaces(): HTMLElement {
     const flight = cells.map((c, i) => {
       const dx = c.centroid[0] - centre[0], dy = c.centroid[1] - centre[1];
       const len = Math.hypot(dx, dy) || 1;
-      const dist = (0.35 + ((i * 37) % 10) / 14) * Math.max(vw(), vh());
-      return { path: paths.get(c.key)!, x: (dx / len) * dist, y: (dy / len) * dist, r: ((i % 2 ? 1 : -1) * (20 + ((i * 53) % 40))), cx: c.centroid[0], cy: c.centroid[1] };
+      const dist = (0.1 + ((i * 37) % 10) / 45) * headW; // in head units: the zoom makes them huge
+      return { path: paths.get(c.key)!, x: (dx / len) * dist, y: (dy / len) * dist, r: ((i % 2 ? 1 : -1) * (6 + ((i * 53) % 12))), cx: c.centroid[0], cy: c.centroid[1] };
     });
     const burst = { t: 0 };
+    // 0 → 0.2: the head cracks (yellow seams, pieces a little apart);
+    // 0.2 → 1: the camera rushes in — the pieces fill the screen (frame 27) while they drift apart
+    const ZOOM = portrait() ? 4.5 : 5.5;
     const renderBurst = () => {
       const u = held(burst.t);
-      const e = u * u * (3 - 2 * u); // smoothstep
+      const crack = Math.min(1, u / 0.2);
+      const v = Math.max(0, (u - 0.2) / 0.8);
+      const e = 0.18 * crack + 0.82 * v * v * (3 - 2 * v);
+      const z = 1 + (ZOOM - 1) * Math.pow(v, 1.6);
       for (const f of flight) {
         f.path.setAttribute('transform', `translate(${f.x * e} ${f.y * e}) rotate(${f.r * e} ${f.cx} ${f.cy})`);
         f.path.style.stroke = u > 0 ? '#ffdd03' : '#111';
-        f.path.style.strokeWidth = u > 0 ? '3' : String(2.5 * 0.6);
+        f.path.style.strokeWidth = u > 0 ? String(3 / z) : String(2.5 * 0.6);
       }
-      const z = 1 + 1.4 * e; // zoom in while it bursts
       headG.setAttribute('transform', `translate(${headX + (headW / 2) * (1 - z)} ${headY + ((headW * HEAD_ASPECT) / 2) * (1 - z)}) scale(${z})`);
       big.setPieces(u > 0);
     };
@@ -238,12 +254,12 @@ export function buildFaces(): HTMLElement {
       .addLabel('in')
       // 25 → 27: the burst, then everything fades into the page colour (28)
       .call(() => { showPart(null); showYear(null); }, [], 'in+=0.01')
-      .to(burst, { t: 1, duration: 1.1 * D, ease: 'none', onUpdate: renderBurst }, 'in+=0.01')
+      .to(burst, { t: 1, duration: 1.3 * D, ease: 'none', onUpdate: renderBurst }, 'in+=0.01')
       .to(rowG.querySelector('.faces__year-axis') ?? {}, { opacity: 0, duration: 0.3 }, 'in+=0.05')
       .to(yearGs, { y: vh() * 0.5, rotation: (i: number) => (i % 2 ? 25 : -25), opacity: 0, duration: 0.9 * D, ease: 'power2.in', stagger: 0.01 }, 'in+=0.05')
       .to(title, { x: -vw() * 0.3, y: vh() * 0.3, rotation: -18, opacity: 0, duration: 0.9 * D, ease: 'power2.in' }, 'in+=0.05')
       .to(section.querySelector('.faces__lede'), { opacity: 0, duration: 0.3 }, 'in+=0.05')
-      .to(headParts, { opacity: 0, duration: 0.4 * D }, `in+=${0.95 * D}`)
+      .to(headParts, { opacity: 0, duration: 0.35 * D, ease: 'power2.in' }, `in+=${1.15 * D}`)
       .addLabel('out');
     renderBurst();
     tl.progress(progress);

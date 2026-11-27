@@ -14,10 +14,7 @@ import { buildClock } from './scenes/clock';
 import { buildYears } from './scenes/years';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
 import headUrl from './assets/tiger-head.svg?url';
-import walk1 from './assets/walk/frame-01.svg?url';
-import walk2 from './assets/walk/frame-02.svg?url';
-import walk3 from './assets/walk/frame-03.svg?url';
-import walk4 from './assets/walk/frame-04.svg?url';
+import walkSvg from './assets/walk/frame-01.svg?raw'; // one drawing; its four legs swing as rigid pieces
 import shotUrl from './assets/walk/tiger-shot.svg?url'; // the shot tiger, lying down (storyboard artwork)
 import splashUrl from './assets/ink-splash.svg?url';
 import { gunshot } from './sound';
@@ -155,18 +152,47 @@ function buildIntro(): HTMLElement {
         </div>
         <p class="opener__body opener__body--next ch01__second">Habitat loss and poaching have driven the decline. Seizure records reveal what happens to some of the tigers caught up in the illegal trade.</p>
         <div class="walker" aria-hidden="true">
-          ${[walk1, walk2, walk3, walk4].map((u, i) => `<img class="walker__frame" src="${u}" alt="" data-i="${i}" />`).join('')}
+          <div class="walker__rig">${walkSvg}</div>
           <img class="walker__shot" src="${shotUrl}" alt="" />
         </div>
         <img class="splash" src="${splashUrl}" alt="" aria-hidden="true" />
+        <div class="intro__black" aria-hidden="true"></div>
         <span class="opener__number ch01__number">01.</span>
       </div>
     </div>`;
   const q = <T extends Element = HTMLElement>(sel: string) => section.querySelector(sel) as unknown as T;
   const zoom = q('.intro__zoom'), veil = q('.intro__veil'), hint = q('.intro__hint');
   const first = q('.ch01__first'), second = q('.ch01__second'), number = q('.ch01__number');
-  const walker = q('.walker'), shot = q('.walker__shot'), splash = q('.splash');
-  const frames = Array.from(section.querySelectorAll<HTMLElement>('.walker__frame'));
+  const walker = q('.walker'), shot = q('.walker__shot'), splash = q('.splash'), black = q('.intro__black');
+  const rig = q('.walker__rig');
+  // Cut-out walk: each leg (upper, lower, paw and their backings) becomes one rigid piece
+  // that swings from the hip — no knees, comic style
+  const HIPS: Record<string, [number, number]> = {
+    'hind-far': [737, 540], 'front-far': [1240, 494], 'hind-near': [515, 539], 'front-near': [1182, 514],
+  };
+  const legs = Object.entries(HIPS).map(([id, hip]) => {
+    const parts = Array.from(rig.querySelectorAll<SVGGElement>(`g[id^="${id}-"]`));
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    parts[0].before(g);
+    g.append(...parts);
+    return { id, hip, g };
+  });
+  const rigSvg = rig.querySelector('svg')!;
+  rigSvg.removeAttribute('width'); rigSvg.removeAttribute('height');
+  const body = Array.from(rig.querySelectorAll<SVGGElement>('#body, #head, #tail'));
+  // Two drawings per stride: diagonal pairs swap (negative = foot forward)
+  const POSES: Record<string, number>[] = [
+    { 'front-near': -15, 'hind-far': -13, 'front-far': 11, 'hind-near': 13 },
+    { 'front-near': 11, 'hind-far': 13, 'front-far': -15, 'hind-near': -13 },
+  ];
+  const pose = (n: number | null) => {
+    for (const l of legs) {
+      const a = n === null ? 0 : POSES[n][l.id];
+      l.g.setAttribute('transform', `rotate(${a} ${l.hip[0]} ${l.hip[1]})`);
+    }
+    // the body dips a touch on each planted step
+    for (const b of body) b.setAttribute('transform', n === null ? '' : `translate(0 ${n ? 8 : 0})`);
+  };
   const menuBtn = document.querySelector<HTMLElement>('.menu-btn');
 
   // Storyboard frames are 1440×900; map them to the screen as "cover"
@@ -181,20 +207,19 @@ function buildIntro(): HTMLElement {
   const endX = () => (portrait() ? (vw() - tigerW()) / 2 : fx(678));
 
   const D = reduced ? 0.01 : 1;
-  const FPS = 12;
-  const held = (t: number) => Math.floor(t * FPS + 1e-6) / FPS;
   const WALK = 2.6; // a slow walk in, then it stops
   const walkClock = { t: 0 };
+  const STEPS = 3;  // leg drawings per second: each step is one whole-leg swing
+  const MOVE = 6;   // the body slides on at 6 drawings per second
   const renderWalk = () => {
-    const tq = held(walkClock.t);
-    const u = Math.min(1, tq / WALK);
+    const t = walkClock.t;
+    const u = Math.min(1, Math.floor(t * MOVE + 1e-6) / MOVE / WALK);
     gsap.set(walker, { x: startX() + (endX() - startX()) * u, y: tigerTop(), width: tigerW(), height: tigerW() * 0.47 });
-    const f = u >= 1 ? 0 : Math.floor(tq * 6) % 4; // 4 drawings, 6 per second; standing still once it arrives
-    frames.forEach((img, i) => { img.style.visibility = i === f ? 'visible' : 'hidden'; });
+    pose(u >= 1 || t <= 0 ? null : Math.floor(t * STEPS) % 2); // standing still once it arrives
   };
   // Splash: born on the tiger's shoulder (frame 12), then covers the centre (frame 13)
   const small = () => ({ size: portrait() ? vw() * 0.75 : 445 * k(), x: endX() + tigerW() * 0.64, y: tigerTop() + tigerW() * 0.1 });
-  const big = () => ({ size: portrait() ? vh() * 1.1 : 1309 * k(), x: portrait() ? vw() / 2 : fx(785), y: portrait() ? vh() * 0.5 : fy(526) });
+  const big = () => ({ size: Math.max(vw(), vh()) * 3.2, x: vw() / 2, y: vh() / 2 }); // ink over the whole screen
   const grow = { p: 0 };
   const renderSplash = () => {
     const p = Math.floor(grow.p * 7) / 7; // spreads in 7 drawings
@@ -236,11 +261,15 @@ function buildIntro(): HTMLElement {
     .call(renderSplash, [], 'walk+=0.02')
     .set(splash, { autoAlpha: 1 }, 'walk+=0.02')
     .fromTo(splash, { scale: 0.2 }, { scale: 1, duration: 0.17 * D, ease: 'steps(2)' }, 'walk+=0.02')
-    .set(frames, { autoAlpha: 0 }, 'walk+=0.02')
+    .set(rig, { autoAlpha: 0 }, 'walk+=0.02')
     .set(shot, { autoAlpha: 1 }, 'walk+=0.02')
-    .fromTo(grow, { p: 0 }, { p: 1, duration: 0.6 * D, ease: 'power1.in', onUpdate: renderSplash }, `walk+=${0.3 * D}`)
     .to(second, { autoAlpha: 0.25, duration: 0.5 * D }, `walk+=${0.3 * D}`)
-    .to([walker, splash, second, number], { autoAlpha: 0, duration: 0.7 * D }, `walk+=${1.3 * D}`)
+    // it stays at its first size a moment, then zooms in until the ink covers the whole screen
+    .fromTo(grow, { p: 0 }, { p: 1, duration: 0.55 * D, ease: 'power2.in', onUpdate: renderSplash }, `walk+=${0.75 * D}`)
+    .fromTo(black, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25 * D, ease: 'steps(2)' }, `walk+=${1.1 * D}`)
+    .set([walker, splash, second, number], { autoAlpha: 0 }, `walk+=${1.35 * D}`)
+    // then the black fades out, slow at first (ease-in), to the empty page (15)
+    .to(black, { autoAlpha: 0, duration: 0.7 * D, ease: 'power2.in' }, `walk+=${1.5 * D}`)
     .addLabel('gone');
 
   registerScene({ section, tl, labels: ['hidden', 'in', 'ch01', 'walk', 'gone'], at: [-99, 0.15, 1.0, 1.9], cutBackFrom: 3, passAt: [3] });

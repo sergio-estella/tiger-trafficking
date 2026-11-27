@@ -332,7 +332,8 @@ html, body { background: var(--pale); }
 .walker img { position: absolute; inset: 0; width: 100%; height: auto; }
 /* The shot tiger (lying down, 2172×724) sits on the same ground line as the walking one */
 .walker .walker__shot { inset: auto; left: -6%; bottom: 0; width: 112%; transform: scaleX(-1); } /* mirrored: it falls facing the way it walked */
-.walker__frame { visibility: hidden; }
+.walker__rig, .walker__rig svg { position: absolute; inset: 0; width: 100%; height: auto; display: block; }
+.intro__black { position: absolute; inset: 0; background: #111; visibility: hidden; opacity: 0; pointer-events: none; }
 .splash { position: absolute; top: 0; left: 0; transform-origin: 50% 50%; }
 
 /* ================================================================== 02 · One face per year (frames 22–28) */
@@ -357,10 +358,12 @@ html, body { background: var(--pale); }
 .faces__year { cursor: default; outline: none; }
 .is-explorable .faces__year { cursor: pointer; }
 .faces__year-box { fill: transparent; stroke: transparent; stroke-width: 2; }
-.faces__year.is-on .faces__year-box, .faces__year:focus-visible .faces__year-box { fill: var(--pale); stroke: #111; }
+.faces__year.is-on .faces__year-box, .faces__year:focus-visible .faces__year-box { fill: #fff; stroke: #111; }
+.faces__year-leader { pointer-events: none; }
 .faces__year-label, .faces__year-axis { font: 400 12px 'Roboto Mono', ui-monospace, monospace; fill: #111; }
 .faces__year.is-on .faces__year-label { font-weight: 700; }
-.faces__note { position: absolute; margin: 0; padding: 6px 0 0; border-top: 1.5px solid #111; font: 400 14px/1.35 var(--body); color: #111; white-space: nowrap; pointer-events: none; }
+.faces__note { position: absolute; margin: 0; font: 400 14px/1.35 var(--body); color: #111; white-space: nowrap; pointer-events: none; }
+.faces__note--left { text-align: right; }
 
 @media (max-width: 700px) and (orientation: portrait) {
   .faces__title { top: 10vh; left: 6vw; }
@@ -446,3 +449,6 @@ html, body { background: var(--pale); }
   .years__chart-title { font-size: 15px; }
   .years__tip { white-space: normal; max-width: 88vw; }
 }
+
+.years__wipe { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.years__wipe path { fill: #e2560c; }

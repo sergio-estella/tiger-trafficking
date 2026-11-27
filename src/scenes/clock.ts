@@ -77,7 +77,7 @@ export function buildClock(): HTMLElement {
   const note = section.querySelector<HTMLElement>('.clock__note')!;
   const cardEl = section.querySelector<HTMLElement>('.clock-card')!;
 
-  let disc: SVGCircleElement, dot: SVGCircleElement, centre: SVGGElement;
+  let ball: SVGGElement, centre: SVGGElement;
   let yearGs: SVGGElement[] = [];
   let decor: SVGGElement;
   let highlight: SVGPathElement;
@@ -93,6 +93,7 @@ export function buildClock(): HTMLElement {
     cx = portrait() ? W / 2 : W * 0.39;
     cy = portrait() ? H * 0.36 : H * 0.5;
     const root = svgEl('g', { transform: `translate(${cx} ${cy})` });
+    rootG = root;
     svg.append(root);
 
     // 26 slices + a 1.5-slice gap at 12 o'clock for the ring names
@@ -229,10 +230,12 @@ export function buildClock(): HTMLElement {
     highlight = svgEl('path', { class: 'clock__highlight' });
     root.append(highlight);
     // The disc that rolls in
-    disc = svgEl('circle', { cx: 0, cy: 0, r: R, fill: C.seizures, class: 'clock__disc' });
-    dot = svgEl('circle', { cx: -R * 0.55, cy: R * 0.6, r: R * 0.11, fill: '#741505' });
-    root.insertBefore(dot, root.firstChild);
-    root.insertBefore(disc, root.firstChild);
+    // (on top of the clock: it hides it until it fades away; the small dot shows it is rolling)
+    ball = svgEl('g', { class: 'clock__ball' });
+    ball.append(svgEl('circle', { cx: 0, cy: 0, r: R, fill: C.seizures, class: 'clock__disc' }));
+    ball.append(svgEl('circle', { cx: R * 0.33, cy: R * 0.72, r: R * 0.11, fill: '#741505' }));
+    root.append(ball);
+    radius = R;
     current = null;
     // highlight geometry
     highlightArc = (i: number) => arc()({ innerRadius: 0.3 * R, outerRadius: 1.04 * R, startAngle: a0(i), endAngle: a0(i) + step })!;
@@ -252,6 +255,8 @@ export function buildClock(): HTMLElement {
   // ---------------------------------------------------------------- timeline
   const FPS = 12;
   let tl = gsap.timeline({ paused: true });
+  let radius = 1;
+  let rootG: SVGGElement;
   function build() {
     const progress = tl.progress();
     tl.kill();
@@ -262,17 +267,29 @@ export function buildClock(): HTMLElement {
       const dist = (0.6 + ((i * 37) % 10) / 12) * Math.max(vw(), vh());
       return { x: Math.sin(a) * dist, y: -Math.cos(a) * dist, r: (i % 2 ? 1 : -1) * (25 + ((i * 53) % 50)) };
     });
+    // the ball rolls without slipping: it turns one radian per radius travelled
+    const roll = { x: 1 };
+    const travel = vw() * 0.9;
+    let lastFrame = -1;
+    const renderRoll = () => {
+      const frame = Math.round(tl.time() * FPS); // drawn on twos (12 per second)
+      if (frame === lastFrame && roll.x > 0 && roll.x < 1) return;
+      lastFrame = frame;
+      const px = roll.x * travel;
+      ball.setAttribute('transform', `translate(${px} 0) rotate(${(px / radius) * (180 / Math.PI)})`);
+    };
+    const texts = Array.from(rootG.querySelectorAll<SVGTextElement>('text')).filter((t) => !centre.contains(t));
+    gsap.set([...yearGs, decor], { opacity: 0 });
     tl = gsap.timeline({ paused: true });
     tl.addLabel('hidden')
-      // 35 → 37: the disc rolls in from the right and settles
-      .fromTo([disc, dot], { x: vw() * 0.75, rotation: 0 }, { x: 0, duration: 0.8 * D, ease: `steps(${Math.round(0.8 * FPS)})`, svgOrigin: '0 0' }, 0)
-      .fromTo(dot, { rotation: 240 }, { rotation: 0, svgOrigin: '0 0', duration: 0.8 * D, ease: `steps(${Math.round(0.8 * FPS)})` }, 0)
-      // 38 → 39: the clock draws itself slice by slice, the disc fades
-      .from(yearGs, { opacity: 0, duration: 0.08, stagger: 0.05, ease: 'steps(1)' }, 0.85 * D)
-      .from(decor, { opacity: 0, duration: 0.4 }, 1.1 * D)
-      .to([disc, dot], { opacity: 0, duration: 0.6 * D }, 1.0 * D)
-      .from(centre, { opacity: 0, duration: 0.3 }, 1.6 * D)
-      .from([legend, note], { opacity: 0, x: 40, duration: 0.4, ease: 'power2.out' }, 1.5 * D)
+      // 35 → 37: only the ball, rolling in from the right (drawn on twos), and it settles
+      .fromTo(roll, { x: 1 }, { x: 0, duration: 0.9 * D, ease: 'power2.out', onUpdate: renderRoll, immediateRender: true }, 0)
+      // 38 → 39: the clock is behind it; the ball fades away and reveals it, then the words come
+      .set([...yearGs, decor], { opacity: 1 }, 0.95 * D)
+      .to(ball, { opacity: 0, duration: 0.5 * D, ease: 'steps(4)' }, 1.0 * D)
+      .from(texts, { opacity: 0, duration: 0.3, ease: 'steps(2)' }, 1.55 * D)
+      .from(centre, { opacity: 0, duration: 0.3 }, 1.55 * D)
+      .from([legend, note], { opacity: 0, x: 40, duration: 0.4, ease: 'power2.out' }, 1.6 * D)
       .addLabel('in')
       // 40 → 41: it falls apart
       .call(() => show(null), [], 'in+=0.01')
