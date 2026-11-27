@@ -104,7 +104,7 @@ export function buildClock(): HTMLElement {
       arc()({ innerRadius: r0 * R, outerRadius: r1 * R, startAngle: a0(i) + pad, endAngle: a0(i) + step - pad })!;
 
     // Events: yellow wedges with their names outside the clock
-    decor = svgEl('g', { class: 'clock__decor' });
+    decor = svgEl('g', { class: 'clock__decor', 'pointer-events': 'none' });
     root.append(decor);
     for (const [yr, name] of Object.entries(EVENTS)) {
       const i = years.findIndex((y) => y.year === Number(yr));
@@ -214,7 +214,7 @@ export function buildClock(): HTMLElement {
       decor.append(t);
     }
     // Centre
-    centre = svgEl('g', { class: 'clock__centre' });
+    centre = svgEl('g', { class: 'clock__centre', 'pointer-events': 'none' });
     const t1 = svgEl('text', { x: 0, y: -4, 'text-anchor': 'middle', class: 'clock__title' }); t1.textContent = 'The trafficking clock';
     const t2 = svgEl('text', { x: 0, y: 14, 'text-anchor': 'middle', class: 'clock__sub' }); t2.textContent = '2000 → 2025, clockwise · one slice = one year';
     centre.append(t1, t2);
@@ -227,11 +227,11 @@ export function buildClock(): HTMLElement {
     ann.innerHTML = '<tspan font-weight="700">320 tigers seized,</tspan><tspan x="' + ax + '" dy="1.2em">the most of any year</tspan>';
     decor.append(ann);
 
-    highlight = svgEl('path', { class: 'clock__highlight' });
+    highlight = svgEl('path', { class: 'clock__highlight', 'pointer-events': 'none' });
     root.append(highlight);
     // The disc that rolls in
     // (on top of the clock: it hides it until it fades away; the small dot shows it is rolling)
-    ball = svgEl('g', { class: 'clock__ball' });
+    ball = svgEl('g', { class: 'clock__ball', 'pointer-events': 'none' }); // faded, it must not catch the hover
     ball.append(svgEl('circle', { cx: 0, cy: 0, r: R, fill: C.seizures, class: 'clock__disc' }));
     ball.append(svgEl('circle', { cx: R * 0.33, cy: R * 0.72, r: R * 0.11, fill: '#741505' }));
     root.append(ball);
@@ -289,7 +289,8 @@ export function buildClock(): HTMLElement {
       .to(ball, { opacity: 0, duration: 0.5 * D, ease: 'steps(4)' }, 1.0 * D)
       .from(texts, { opacity: 0, duration: 0.3, ease: 'steps(2)' }, 1.55 * D)
       .from(centre, { opacity: 0, duration: 0.3 }, 1.55 * D)
-      .from([legend, note], { opacity: 0, x: 40, duration: 0.4, ease: 'power2.out' }, 1.6 * D)
+      // fromTo, not from: the legend outlives rebuilds (resize), so its end state is written out
+      .fromTo([legend, note], { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 1.6 * D)
       .addLabel('in')
       // 40 → 41: it falls apart
       .call(() => show(null), [], 'in+=0.01')

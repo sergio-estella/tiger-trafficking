@@ -285,7 +285,7 @@ export function buildYears(): HTMLElement {
     for (const s of ORDER) gsap.set(layers[s], { opacity: 0 });
     tl = gsap.timeline({ paused: true });
     tl.addLabel('hidden')
-      .from(head, { y: 40, opacity: 0, duration: 0.5 * D, ease: 'power2.out' }, 0)
+      .fromTo(head, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 * D, ease: 'power2.out' }, 0)
       .fromTo(layers.seizures, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.2 * D)
       .from([axisX, events], { opacity: 0, duration: 0.3 }, 0.2 * D)
       // 42: the bars come in from outside, in pieces, and the chart puts itself together

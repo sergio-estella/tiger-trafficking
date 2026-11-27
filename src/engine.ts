@@ -84,11 +84,27 @@ export function updateScenes() {
     s.index = index;
     s.onStep?.(index);
     s.tween?.kill();
-    if (cut) s.tl.pause().seek(s.labels[index]);
+    if (cut) {
+      s.tl.pause().seek(s.labels[index]);
+      redraw(s.tl);
+    }
     else {
       s.tween = s.tl.tweenTo(s.labels[index], { ease: 'none' });
       markBusy(s.tween.duration());
     }
+  }
+}
+
+/**
+ * A seek does not fire callbacks, so the hand-drawn parts of a scene (pieces of a
+ * burst, bars in flight, the walking tiger) would stay where they were. Their
+ * tweens draw in onUpdate from the tweened values, which the seek did restore:
+ * call them once, in timeline order.
+ */
+function redraw(tl: gsap.core.Timeline) {
+  for (const child of tl.getChildren(true, true, false)) {
+    const fn = child.vars.onUpdate;
+    if (typeof fn === 'function') fn.apply(child, child.vars.onUpdateParams ?? []);
   }
 }
 

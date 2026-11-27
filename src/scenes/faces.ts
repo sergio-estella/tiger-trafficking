@@ -38,8 +38,8 @@ export function buildFaces(): HTMLElement {
     <div class="scene__stage faces__stage">
       <h2 class="faces__title display" id="faces-title">One face per year</h2>
       <p class="faces__lede">Each cell of the head is one kind of tiger part, sized by the seizures that contained it (2000 – June 2025). Below, one head per year: head area = seizures that year.</p>
-      <svg class="faces__svg" aria-hidden="true"></svg>
       <div class="faces__labels"></div>
+      <svg class="faces__svg" aria-hidden="true"></svg>
       <p class="faces__note" hidden></p>
     </div>`;
   const stage = section.querySelector<HTMLElement>('.faces__stage')!;
@@ -248,8 +248,8 @@ export function buildFaces(): HTMLElement {
     tl = gsap.timeline({ paused: true });
     tl.addLabel('hidden')
       .from(riseG, { y: vh() * 0.8, duration: 0.8 * D, ease: 'power3.out' }, 0)           // 22 → 23: rises
-      .from(title, { x: vw() * 0.6, opacity: 0, duration: 0.6 * D, ease: 'power3.out' }, 0.35 * D) // 23: title in
-      .from(section.querySelector('.faces__lede'), { opacity: 0, duration: 0.4 * D }, 0.7 * D)
+      .fromTo(title, { x: vw() * 0.6, opacity: 0 }, { x: 0, y: 0, rotation: 0, opacity: 1, duration: 0.6 * D, ease: 'power3.out' }, 0.35 * D) // 23: title in
+      .fromTo(section.querySelector('.faces__lede'), { opacity: 0 }, { opacity: 0.75, duration: 0.4 * D }, 0.7 * D)
       .from(yearGs, { opacity: 0, scale: 0.2, transformOrigin: '50% 100%', duration: 0.12, stagger: 0.025, ease: 'steps(2)' }, 0.6 * D)
       .addLabel('in')
       // 25 → 27: the burst, then everything fades into the page colour (28)
