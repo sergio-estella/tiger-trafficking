@@ -12,6 +12,9 @@ import { registerScene, registerStops, startEngine } from './engine';
 import { buildFaces } from './scenes/faces';
 import { buildClock } from './scenes/clock';
 import { buildYears } from './scenes/years';
+import { buildParts } from './scenes/parts';
+import { buildRadar } from './scenes/radar';
+import { buildJailed } from './scenes/jailed';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
 import headUrl from './assets/tiger-head.svg?url';
 import walkSvg from './assets/walk/frame-01.svg?raw'; // one drawing; its four legs swing as rigid pieces
@@ -286,6 +289,9 @@ export function buildStory(before: HTMLElement) {
     else if (s.kind === 'faces') frag.append(buildFaces());
     else if (s.kind === 'clock') frag.append(buildClock());
     else if (s.kind === 'years') frag.append(buildYears());
+    else if (s.kind === 'parts') frag.append(buildParts());
+    else if (s.kind === 'radar') frag.append(buildRadar());
+    else if (s.kind === 'jailed') frag.append(buildJailed());
     else frag.append(buildPlaceholder(s as Placeholder));
   }
   before.before(frag);

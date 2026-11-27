@@ -34,7 +34,7 @@ export interface Placeholder {
 }
 
 /** A built chart scene (see src/scenes/) */
-export interface Built { kind: 'faces' | 'clock' | 'years'; frames: string }
+export interface Built { kind: 'faces' | 'clock' | 'years' | 'parts' | 'radar' | 'jailed'; frames: string }
 
 export type Section = Opener | Placeholder | Built;
 
@@ -61,9 +61,9 @@ export const story: Section[] = [
     body: 'Skins and bones tell one part of the story. Claws and teeth tell another. The mix of parts found in seizures changes from year to year.',
     enter: { title: 'right', body: 'below' }, exit: { title: 'left', body: 'above' },
   },
-  { kind: 'placeholder', number: '04.', frames: '57–62', title: 'What was seized', note: 'Tiger parts, icons' },
-  { kind: 'placeholder', number: '04.', frames: '63–67', title: 'What is trafficked (shares per period)', note: 'Radar shapes, 2000–04 … 2020–25' },
-  { kind: 'placeholder', number: '04.', frames: '68–78', title: 'People jailed for tiger trafficking · man behind bars', note: 'Chart and illustration before the chapter 05 opener' },
+  { kind: 'parts', frames: '57–62' },
+  { kind: 'radar', frames: '63–67' },
+  { kind: 'jailed', frames: '68–78' }, // trophy vs amulet, people jailed, the man behind bars
   {
     kind: 'opener', id: 'ch05', number: '05.', frames: '79–83', theme: 'pale', fromBlack: true,
     title: 'People jailed',
