@@ -14,49 +14,14 @@
  */
 import { gsap } from 'gsap';
 import { registerScene } from '../engine';
-import { parseCsv, type PartKey } from '../data/series';
 import { svgEl } from '../charts/faces';
-import periodsCsv from '../data/derived_part_shares_by_period.csv?raw';
-import yearsCsv from '../data/derived_part_shares_by_year.csv?raw';
+import { PERIOD_COLORS, YEAR_STOPS, periods, periodOf, yearRows, val, drawRadar } from '../charts/radar';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FPS = 12;
 const vw = () => window.innerWidth;
 const vh = () => window.innerHeight;
 const portrait = () => vh() > vw();
-
-// clockwise from the top, as in frame 66
-const AXES: { key: PartKey; label: string }[] = [
-  { key: 'Skins', label: 'skins' }, { key: 'Skulls', label: 'skulls' }, { key: 'Bones', label: 'bones' },
-  { key: 'Meat', label: 'meat' }, { key: 'Derivatives', label: 'derivatives' }, { key: 'Other_parts', label: 'other parts' },
-  { key: 'Paws', label: 'paws' }, { key: 'Teeth', label: 'teeth' }, { key: 'Claws', label: 'claws' },
-  { key: 'Live_tigers', label: 'live tigers' }, { key: 'Dead_tigers', label: 'dead tigers' },
-];
-const GROUPS = [
-  { from: 0, to: 5, label: 'trophy & traditional medicine', color: '#e2560c' },
-  { from: 6, to: 8, label: 'amulet & jewellery', color: '#741505' },
-  { from: 9, to: 10, label: 'whole animal', color: '#111111' },
-];
-const PERIOD_COLORS = ['#8a7a66', '#f6a33b', '#e2560c', '#9e220a', '#111111'];
-const YEAR_STOPS = ['#a89a86', '#f6a33b', '#e2560c', '#9e220a', '#111111'];
-const MAX = 55; // % at the outer ring (square-root scale)
-const RINGS = [1, 10, 25, 50];
-
-const periods = parseCsv(periodsCsv).map((r) => ({
-  label: r.period, total: Number(r.part_appearances_total), from: Number(r.year_from), to: Number(r.year_to),
-  v: AXES.map((a) => Number(r[`pct_${a.key}`])),
-}));
-const periodOf = (year: number) => periods.findIndex((p) => year >= p.from && year <= p.to);
-const yearRows = parseCsv(yearsCsv).map((r) => ({ year: Number(r.year), v: AXES.map((a) => Number(r[`pct_${a.key}`])) }));
-
-function lerpHex(stops: string[], t: number) {
-  const x = Math.max(0, Math.min(1, t)) * (stops.length - 1);
-  const i = Math.min(stops.length - 2, Math.floor(x)), f = x - i;
-  const a = parseInt(stops[i].slice(1), 16), b = parseInt(stops[i + 1].slice(1), 16);
-  const ch = (s: number) => Math.round(((a >> s) & 255) * (1 - f) + ((b >> s) & 255) * f);
-  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
-}
-const val = (p: (typeof periods)[number], key: PartKey) => p.v[AXES.findIndex((a) => a.key === key)];
 
 export function buildRadar(): HTMLElement {
   const first = periods[0], last = periods[periods.length - 1];
@@ -93,12 +58,6 @@ export function buildRadar(): HTMLElement {
 
   let chart: SVGGElement, web: SVGGElement, yearLines: SVGPathElement[] = [], shapes: SVGGElement[] = [], groupArcs: SVGGElement;
   let cx = 0, cy = 0, R = 1;
-  const angle = (i: number) => (i / AXES.length) * Math.PI * 2;
-  const pt = (i: number, v: number): [number, number] => {
-    const r = Math.sqrt(Math.max(0, v) / MAX) * R;
-    return [Math.sin(angle(i)) * r, -Math.cos(angle(i)) * r];
-  };
-  const shapeD = (v: number[]) => v.map((x, i) => `${i ? 'L' : 'M'}${pt(i, x).map((n) => n.toFixed(1)).join(',')}`).join('') + 'Z';
 
   function layout() {
     svg.innerHTML = '';
@@ -110,59 +69,7 @@ export function buildRadar(): HTMLElement {
     chart = svgEl('g');
     svg.append(chart);
 
-    // web: rings + spokes + axis names
-    web = svgEl('g', { class: 'radar__web' });
-    for (const ring of RINGS) {
-      const d = AXES.map((_, i) => `${i ? 'L' : 'M'}${pt(i, ring).join(',')}`).join('') + 'Z';
-      web.append(svgEl('path', { d, class: 'radar__ring' }));
-      const [x, y] = pt(1, ring);
-      const t = svgEl('text', { x: x + 4, y: y - 3, class: 'radar__tick' });
-      t.textContent = `${ring}%`;
-      web.append(t);
-    }
-    AXES.forEach((a, i) => {
-      const [x, y] = pt(i, MAX);
-      web.append(svgEl('line', { x1: 0, y1: 0, x2: x, y2: y, class: 'radar__spoke' }));
-      const [lx, ly] = pt(i, MAX * 1.22);
-      const t = svgEl('text', { x: lx, y: ly + 5, 'text-anchor': 'middle', class: 'radar__axis' });
-      t.textContent = a.label;
-      web.append(t);
-    });
-
-    // thin lines, one per year
-    const yg = svgEl('g', { class: 'radar__year-lines' });
-    yearLines = yearRows.map((y) => {
-      const p = svgEl('path', { d: shapeD(y.v), stroke: lerpHex(YEAR_STOPS, (y.year - 2000) / 25), class: 'radar__year' });
-      yg.append(p);
-      return p;
-    });
-
-    // period shapes (each in its own group: it grows from the centre)
-    const sg = svgEl('g');
-    shapes = periods.map((p, i) => {
-      const g = svgEl('g', { class: 'radar__shape', 'data-i': i });
-      g.append(svgEl('path', { d: shapeD(p.v), stroke: PERIOD_COLORS[i], fill: PERIOD_COLORS[i] }));
-      sg.append(g);
-      return g;
-    });
-
-    // the three groups around the edge
-    groupArcs = svgEl('g', { class: 'radar__groups' });
-    const step = (Math.PI * 2) / AXES.length;
-    const RA = R * 1.36;
-    for (const gr of GROUPS) {
-      const a0 = angle(gr.from) - step * 0.42, a1 = angle(gr.to) + step * 0.42;
-      const p0 = [Math.sin(a0) * RA, -Math.cos(a0) * RA], p1 = [Math.sin(a1) * RA, -Math.cos(a1) * RA];
-      const large = a1 - a0 > Math.PI ? 1 : 0;
-      groupArcs.append(svgEl('path', { d: `M${p0.join(',')}A${RA},${RA} 0 ${large} 1 ${p1.join(',')}`, stroke: gr.color, class: 'radar__arc', pathLength: 1 }));
-      const am = (a0 + a1) / 2;
-      const lr = RA + 18;
-      const lx = Math.sin(am) * lr, ly = -Math.cos(am) * lr;
-      const t = svgEl('text', { x: lx, y: ly, fill: gr.color, class: 'radar__group', 'text-anchor': lx > 4 ? 'start' : lx < -4 ? 'end' : 'middle' });
-      t.textContent = gr.label;
-      groupArcs.append(t);
-    }
-    chart.append(web, yg, sg, groupArcs);
+    ({ web, yearLines, shapes, groupArcs } = drawRadar(chart, R));
     renderGrow();
     renderZoom();
     renderIris();
