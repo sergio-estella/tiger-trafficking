@@ -12,6 +12,7 @@
  */
 import { gsap } from 'gsap';
 import { registerScene } from '../engine';
+import { placeTip } from '../tip';
 import { EVENTS, YEAR_COLORS as C, years } from '../data/series';
 import { hatchDefs, svgEl } from '../charts/faces';
 
@@ -55,7 +56,7 @@ export function buildYears(): HTMLElement {
   section.innerHTML = `
     <div class="scene__stage years__stage">
       <header class="years__head">
-        <h2 class="years__title" id="years-title">Year by year: seizures rose, tigers seized peaked in 2016</h2>
+        <h2 class="years__title display" id="years-title">Year by year</h2>
         <p class="years__lede">Seizures climbed from 58 in 2000 to a peak of 141 in 2019. Tigers seized peaked at 320 in 2016. Every chart below shares the same year positions.</p>
         <ul class="years__legend">
           <li><span style="--c:${C.seizures}"></span>seizures in tiger range countries</li>
@@ -224,9 +225,13 @@ export function buildYears(): HTMLElement {
         ? `<strong>${yr}</strong> ${fmt.format(y.tigersTotal ?? 0)} tigers seized${y.tigersRange != null ? ` · ${y.tigersRange} in range, ${y.tigersOutside} outside` : ' · range / outside split n/a'}`
         : `<strong>${yr}</strong> ${((y.pctDead ?? 0) + (y.pctLive ?? 0)).toFixed(1)}% of seizures with whole animals · dead ${y.pctDead}%, live ${y.pctLive}%`;
     tip.hidden = false;
-    const cx = geom.x0 + geom.band * (i + 0.5);
-    tip.style.left = `${Math.min(vw() - tip.offsetWidth - 10, Math.max(10, cx - tip.offsetWidth / 2))}px`;
-    tip.style.top = `${geom.y0 - 4}px`;
+    // above the bar, never over it (nor over the legend)
+    const r1 = bars[i].b.getBoundingClientRect(), r2 = bars[i].t.getBoundingClientRect();
+    const rs = [r1, r2].filter((r) => r.width > 0 && r.height > 0);
+    const top = Math.min(...rs.map((r) => r.top)), bottom = Math.max(...rs.map((r) => r.bottom));
+    const left = Math.min(...rs.map((r) => r.left)), right = Math.max(...rs.map((r) => r.right));
+    const anchor = rs.length ? new DOMRect(left, top, right - left, bottom - top) : new DOMRect(geom.x0 + geom.band * i, geom.y1 - 2, geom.band, 2);
+    placeTip(tip, anchor, [head.getBoundingClientRect()], i < years.length / 2 ? ['above', 'right', 'left'] : ['above', 'left', 'right']);
   }
 
   // ---------------------------------------------------------------- timeline

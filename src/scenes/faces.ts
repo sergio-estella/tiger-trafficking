@@ -37,7 +37,7 @@ export function buildFaces(): HTMLElement {
   section.innerHTML = `
     <div class="scene__stage faces__stage">
       <h2 class="faces__title display" id="faces-title">One face per year</h2>
-      <p class="faces__lede">Each cell of the head is one kind of tiger part, sized by the seizures that contained it (2000 – June 2025). Below, one head per year: head area = seizures that year.</p>
+      <p class="faces__lede">Each cell of the head is one kind of tiger part, sized by the seizures that contained it (2000 – June 2025).</p>
       <div class="faces__labels"></div>
       <svg class="faces__svg" aria-hidden="true"></svg>
       <p class="faces__note" hidden></p>
@@ -68,7 +68,7 @@ export function buildFaces(): HTMLElement {
     svg.append(hatchDefs('face-hatch-legend', 4));
 
     // Big head (frame 24: ~400 px wide on 1440×900, centred, upper half)
-    headW = portrait() ? Math.min(W * 0.72, H * 0.38) : Math.min(H * 0.42, W * 0.3);
+    headW = 1.2 * (portrait() ? Math.min(W * 0.6, H * 0.32) : Math.min(H * 0.42, W * 0.3));
     headX = W / 2 - headW / 2;
     headY = portrait() ? H * 0.25 : (H - headW * HEAD_ASPECT) / 2; // centred in the height (desktop)
     cells = voronoiHead(partTotals, headW, 11);
@@ -117,7 +117,7 @@ export function buildFaces(): HTMLElement {
     const rowBottom = (r: number) => (portrait() ? H * 0.78 + r * (maxW * 1.9) : H * 0.91);
     if (!portrait()) {
       const t = svgEl('text', { x: x0 - 14, y: rowBottom(0) + 18, class: 'faces__year-axis', 'text-anchor': 'end' });
-      t.textContent = 'year';
+      t.textContent = 'YEAR';
       rowG.append(t);
     }
     years.forEach((y, i) => {
@@ -224,12 +224,12 @@ export function buildFaces(): HTMLElement {
       const dx = c.centroid[0] - centre[0], dy = c.centroid[1] - centre[1];
       const len = Math.hypot(dx, dy) || 1;
       const dist = (0.1 + ((i * 37) % 10) / 45) * headW; // in head units: the zoom makes them huge
-      return { path: paths.get(c.key)!, x: (dx / len) * dist, y: (dy / len) * dist, r: ((i % 2 ? 1 : -1) * (6 + ((i * 53) % 12))), cx: c.centroid[0], cy: c.centroid[1] };
+      return { path: paths.get(c.key)!, x: (dx / len) * dist, y: (dy / len) * dist, r: ((i % 2 ? 1 : -1) * (35 + ((i * 53) % 60))), cx: c.centroid[0], cy: c.centroid[1] };
     });
     const burst = { t: 0 };
     // 0 → 0.2: the head cracks (yellow seams, pieces a little apart);
     // 0.2 → 1: the camera rushes in — the pieces fill the screen (frame 27) while they drift apart
-    const ZOOM = portrait() ? 4.5 : 5.5;
+    const ZOOM = portrait() ? 11 : 14; // the camera rushes far into the pieces
     const renderBurst = () => {
       const u = held(burst.t);
       const crack = Math.min(1, u / 0.2);

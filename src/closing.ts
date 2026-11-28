@@ -187,6 +187,8 @@ export function createClosing(section: HTMLElement): ClosingApi {
     const clock = { t: 0 };
     let lastFrontal = -1;
     const renderFrontal = () => {
+      // at the end of the pounce the page must sit still, whatever drawing was last
+      if (clock.t >= T.out - 1e-4 || clock.t <= 0) gsap.set(stage, { x: 0, y: 0 });
       const tq = held(clock.t);
       if (tq === lastFrontal) return;
       lastFrontal = tq;
@@ -195,7 +197,9 @@ export function createClosing(section: HTMLElement): ClosingApi {
       const boil = tq < T.hold ? BOIL[n % BOIL.length] : BOIL[0];
       const b = sample(burstKeys, tq);
       // sized, not scaled, so the vector is redrawn crisp at every size
-      gsap.set(burstEl, { x: fx(b.x), y: fy(b.y), width: 181 * b.s * k, height: 116 * b.s * k });
+      // the position follows from the size, so the red core never leaves the centre of the page
+      const bx = 720 - CORE.x * b.s, by = 450 - CORE.y * b.s;
+      gsap.set(burstEl, { x: fx(bx), y: fy(by), width: 181 * b.s * k, height: 116 * b.s * k });
       gsap.set(burstSvg, { rotation: boil.r, scaleX: boil.sx, scaleY: boil.sy, transformOrigin: `${(CORE.x / 181) * 100}% ${(CORE.y / 116) * 100}%` });
       for (const d of debris) {
         const age = tq - d.delay;
@@ -212,7 +216,7 @@ export function createClosing(section: HTMLElement): ClosingApi {
       const sc = g.s * k;
       gsap.set(frontalEl, { x: fx(g.x) - 768 * sc, y: fy(g.y) - 474 * sc, width: 1536 * sc, height: 1024 * sc });
       // The pounce: everything shakes while the tiger comes at the reader, harder as it gets closer
-      if (tq >= T.burstOut && tq < T.out) {
+      if (tq >= T.burstOut && clock.t < T.out - 1e-4) {
         const p = (tq - T.burstOut) / (T.out - T.burstOut);
         const amp = (6 + 22 * p) * k;
         const j = SHAKE[n % SHAKE.length];

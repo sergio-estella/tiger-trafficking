@@ -18,6 +18,7 @@ import { arc } from 'd3-shape';
 import { registerScene } from '../engine';
 import { EVENTS, YEAR_COLORS as C, years, type YearRow } from '../data/series';
 import { hatchDefs, svgEl } from '../charts/faces';
+import { placeTip, type Side } from '../tip';
 
 const fmt = new Intl.NumberFormat('en-GB');
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -66,6 +67,7 @@ export function buildClock(): HTMLElement {
   section.setAttribute('aria-label', 'The trafficking clock, 2000 – June 2025');
   section.innerHTML = `
     <div class="scene__stage clock__stage">
+      <h2 class="clock__head display">The trafficking clock</h2>
       <svg class="clock__svg" aria-hidden="true"></svg>
       <ul class="clock__legend">${LEGEND.map(([c, t, kind]) => `<li><span class="clock__sw clock__sw--${kind ?? 'box'}" style="--c:${c}"></span>${t}</li>`).join('')}</ul>
       <p class="clock__note">All rings read on the same radius: one year = one slice. Rings are drawn to their own scale. 2025 = January–June (dashed).</p>
@@ -74,6 +76,7 @@ export function buildClock(): HTMLElement {
   const stage = section.querySelector<HTMLElement>('.clock__stage')!;
   const svg = section.querySelector<SVGSVGElement>('.clock__svg')!;
   const legend = section.querySelector<HTMLElement>('.clock__legend')!;
+  const headline = section.querySelector<HTMLElement>('.clock__head')!;
   const note = section.querySelector<HTMLElement>('.clock__note')!;
   const cardEl = section.querySelector<HTMLElement>('.clock-card')!;
 
@@ -178,6 +181,7 @@ export function buildClock(): HTMLElement {
       hit.addEventListener('focus', () => { if (explorable) show(i); });
       hit.addEventListener('blur', () => show(null));
       g.append(hit);
+      hits[i] = hit;
       root.append(g);
       return g;
     });
@@ -215,8 +219,9 @@ export function buildClock(): HTMLElement {
     }
     // Centre
     centre = svgEl('g', { class: 'clock__centre', 'pointer-events': 'none' });
-    const t1 = svgEl('text', { x: 0, y: -4, 'text-anchor': 'middle', class: 'clock__title' }); t1.textContent = 'The trafficking clock';
-    const t2 = svgEl('text', { x: 0, y: 14, 'text-anchor': 'middle', class: 'clock__sub' }); t2.textContent = '2000 → 2025, clockwise · one slice = one year';
+    // (the headline sits top right, with the legend)
+    const t1 = svgEl('text', { x: 0, y: -3, 'text-anchor': 'middle', class: 'clock__sub' }); t1.textContent = '2000 → 2025, clockwise';
+    const t2 = svgEl('text', { x: 0, y: 10, 'text-anchor': 'middle', class: 'clock__sub' }); t2.textContent = 'one slice = one year';
     centre.append(t1, t2);
     root.append(centre);
     // 2016 annotation
@@ -232,24 +237,29 @@ export function buildClock(): HTMLElement {
     // The disc that rolls in
     // (on top of the clock: it hides it until it fades away; the small dot shows it is rolling)
     ball = svgEl('g', { class: 'clock__ball', 'pointer-events': 'none' }); // faded, it must not catch the hover
-    ball.append(svgEl('circle', { cx: 0, cy: 0, r: R, fill: C.seizures, class: 'clock__disc' }));
+    ball.append(svgEl('circle', { cx: 0, cy: 0, r: R * 1.07, fill: C.seizures, class: 'clock__disc' })); // covers the event wedges (1.05 R) too
     ball.append(svgEl('circle', { cx: R * 0.33, cy: R * 0.72, r: R * 0.11, fill: '#741505' }));
     root.append(ball);
-    radius = R;
+    radius = R * 1.07;
     current = null;
     // highlight geometry
     highlightArc = (i: number) => arc()({ innerRadius: 0.3 * R, outerRadius: 1.04 * R, startAngle: a0(i), endAngle: a0(i) + step })!;
   }
 
   let current: number | null = null;
+  const hits: SVGPathElement[] = [];
   let highlightArc = (_i: number) => '';
   function show(i: number | null) {
     current = i;
-    if (i === null) { highlight.setAttribute('d', ''); cardEl.hidden = true; legend.classList.remove('is-dim'); return; }
+    if (i === null) { highlight.setAttribute('d', ''); cardEl.hidden = true; return; }
     highlight.setAttribute('d', highlightArc(i));
     cardEl.innerHTML = card(years[i]);
     cardEl.hidden = false;
-    legend.classList.add('is-dim');
+    // next to the slice, on its outer side, never over the slice nor the legend
+    const a = hits[i].getBoundingClientRect();
+    const right = a.left + a.width / 2 > cx, down = a.top + a.height / 2 > cy;
+    const order: Side[] = [right ? 'right' : 'left', down ? 'below' : 'above', down ? 'above' : 'below', right ? 'left' : 'right'];
+    placeTip(cardEl, a, [legend.getBoundingClientRect(), note.getBoundingClientRect(), headline.getBoundingClientRect()], order);
   }
 
   // ---------------------------------------------------------------- timeline
@@ -290,12 +300,12 @@ export function buildClock(): HTMLElement {
       .from(texts, { opacity: 0, duration: 0.3, ease: 'steps(2)' }, 1.55 * D)
       .from(centre, { opacity: 0, duration: 0.3 }, 1.55 * D)
       // fromTo, not from: the legend outlives rebuilds (resize), so its end state is written out
-      .fromTo([legend, note], { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 1.6 * D)
+      .fromTo([headline, legend, note], { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 1.6 * D)
       .addLabel('in')
       // 40 → 41: it falls apart
       .call(() => show(null), [], 'in+=0.01')
       .to(yearGs, { x: (i: number) => spread[i].x, y: (i: number) => spread[i].y, rotation: (i: number) => spread[i].r, svgOrigin: '0 0', duration: 1.1 * D, ease: `steps(${Math.round(1.1 * FPS)})` }, 'in+=0.01')
-      .to([decor, centre, legend, note], { opacity: 0, duration: 0.4 * D }, 'in+=0.01')
+      .to([decor, centre, headline, legend, note], { opacity: 0, duration: 0.4 * D }, 'in+=0.01')
       .to(yearGs, { opacity: 0, duration: 0.3 * D }, `in+=${0.9 * D}`)
       .addLabel('out');
     tl.progress(progress);

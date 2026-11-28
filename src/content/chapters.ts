@@ -34,7 +34,7 @@ export interface Placeholder {
 }
 
 /** A built chart scene (see src/scenes/) */
-export interface Built { kind: 'faces' | 'clock' | 'years' | 'parts' | 'radar' | 'jailed'; frames: string }
+export interface Built { kind: 'faces' | 'clock' | 'years' | 'parts' | 'radar' | 'jailed' | 'seizures'; frames: string }
 
 export type Section = Opener | Placeholder | Built;
 
@@ -63,7 +63,7 @@ export const story: Section[] = [
   },
   { kind: 'parts', frames: '57–62' },
   { kind: 'radar', frames: '63–67' },
-  { kind: 'jailed', frames: '68–78' }, // trophy vs amulet, people jailed, the man behind bars
+  { kind: 'jailed', frames: '68–78' }, // trophy vs amulet, people jailed, the man behind bars, PEOPLE JAILED
   {
     kind: 'opener', id: 'ch05', number: '05.', frames: '79–83', theme: 'pale', fromBlack: true,
     title: 'People jailed',
@@ -76,5 +76,5 @@ export const story: Section[] = [
     body: 'Between January 2020 and June 2025, authorities recorded seizures both within and beyond tiger-range countries.',
     enter: { title: 'none', body: 'none' }, exit: { title: 'above', body: 'above' },
   },
-  { kind: 'placeholder', number: '06.', frames: '86–91', title: 'Seizures by country, 2020–2025 (hexagons)', note: 'Ends dripping into red (chapter 07)' },
+  { kind: 'seizures', frames: '86–91' }, // hexagons + threads; ends in blood, into chapter 07
 ];

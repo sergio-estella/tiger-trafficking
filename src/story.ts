@@ -15,6 +15,7 @@ import { buildYears } from './scenes/years';
 import { buildParts } from './scenes/parts';
 import { buildRadar } from './scenes/radar';
 import { buildJailed } from './scenes/jailed';
+import { buildSeizures } from './scenes/seizures';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
 import headUrl from './assets/tiger-head.svg?url';
 import walkSvg from './assets/walk/frame-01.svg?raw'; // one drawing; its four legs swing as rigid pieces
@@ -76,7 +77,12 @@ function buildOpener(o: Opener): HTMLElement {
 
   const fromT = offset(o.enter.title), fromB = offset(o.enter.body);
   tl.addLabel('hidden');
-  if (o.fromBlack) tl.fromTo(stage, { backgroundColor: '#000' }, { backgroundColor: 'var(--pale)', duration: D, ease: 'none' });
+  if (o.fromBlack) {
+    // 79 → 80: the black of the previous scene slides away to the left and uncovers the page
+    const curtain = html('div', 'opener__curtain');
+    stage.append(curtain);
+    tl.fromTo(curtain, { xPercent: 0 }, { xPercent: -101, duration: reduced ? 0.01 : 0.9, ease: 'steps(9)' }, reduced ? 0 : 0.15);
+  }
   if (o.enter.title !== 'none') tl.from(head, { x: fromT.x, y: fromT.y, duration: D, ease }, 0);
   if (o.enter.body !== 'none') tl.from(body, { x: fromB.x, y: fromB.y, opacity: 0, duration: D, ease }, D * 0.2);
   tl.addLabel('in', `+=${reduced ? 0 : 0.01}`);
@@ -238,17 +244,18 @@ function buildIntro(): HTMLElement {
   const hintFrom = () => -(vh() * 0.22); // the tab drops out of the title
   const tl = gsap.timeline({ paused: true });
   tl.addLabel('hidden')
-    .fromTo(zoom, { opacity: 0 }, { opacity: 0.2, duration: reduced ? 0.01 : 0.35, ease: 'none' })   // frame 2
+    .fromTo(zoom, { opacity: 0 }, { opacity: 0.2, duration: reduced ? 0.01 : 0.35, ease: 'none' }, reduced ? 0 : 0.6)   // frame 2 (after a beat on the empty page)
     .to(zoom, { opacity: 1, duration: reduced ? 0.01 : 0.6, ease: 'power1.out' })                    // frame 3
     .fromTo(hint, { y: hintFrom, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: 'power3.out' }, '-=0.15')
     .addLabel('in')
     .to(hint, { y: 67, opacity: 0, duration: 0.15 }, 'in')
     // 4 → 8: a small pull back (anticipation), then a fast zoom into the face
     .to(zoom, { scale: reduced ? 1 : 0.9, duration: 0.22 * D, ease: 'power2.out' }, 'in')
-    .to(zoom, { scale: reduced ? 1 : 9, duration: 0.7 * D, ease: 'power4.in' }, `in+=${0.22 * D}`)
-    .fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.45 * D, ease: 'power2.in' }, `in+=${0.5 * D}`)
+    // slow at first, then faster and faster (ease-in), much deeper
+    .to(zoom, { scale: reduced ? 1 : 30, duration: 1.0 * D, ease: 'expo.in' }, `in+=${0.22 * D}`)
+    .fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.3 * D, ease: 'power2.in' }, `in+=${0.95 * D}`)
     // 9 → 10: number, then text, then the menu button; waits on "…the estimate was about 5,600."
-    .to(number, { autoAlpha: 1, duration: 0.3 }, `in+=${1.0 * D}`)
+    .to(number, { autoAlpha: 1, duration: 0.3 }, `in+=${1.3 * D}`)
     .fromTo(first, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out' }, '>-0.05')
     .to(menuBtn ?? {}, { autoAlpha: 1, duration: 0.4 }, '>')
     .addLabel('ch01')
@@ -292,6 +299,7 @@ export function buildStory(before: HTMLElement) {
     else if (s.kind === 'parts') frag.append(buildParts());
     else if (s.kind === 'radar') frag.append(buildRadar());
     else if (s.kind === 'jailed') frag.append(buildJailed());
+    else if (s.kind === 'seizures') frag.append(buildSeizures());
     else frag.append(buildPlaceholder(s as Placeholder));
   }
   before.before(frag);

@@ -6,17 +6,19 @@
  *  trophy → jailed   it slides up and away; "People jailed for tiger trafficking"
  *                    comes up and its bars land in pieces (70–71); HOLD · EXPLORE
  *                    (hover / tap a year)
- *  jailed → man      the man behind bars shows through the chart (72–73), the chart
- *                    goes, and he is all there is (74); HOLD
- *  man → words       cut to red on black (75); PEOPLE JAILED, the man seen through
- *                    the letters, which pull back to fit the screen (76–77); HOLD
- *  words → out       the letters go, black; a red drop falls (78); the page carries
- *                    on to chapter 05, which starts on black
+ *  jailed → words  the chart fades out while the man behind bars comes through
+ *                    (72–74); cut to red on black (75); PEOPLE JAILED in black comes
+ *                    in huge, the screen almost all black, and settles on his face
+ *                    (76); HOLD · READ
+ *  words → out       on its own: the letters turn into windows on the man and pull
+ *                    back (77); black, a red drop falls (78); chapter 05 follows,
+ *                    a black curtain sliding away to the left (79–80)
  */
 import { gsap } from 'gsap';
 import { registerScene } from '../engine';
 import { EVENTS, parseCsv, years } from '../data/series';
 import { svgEl } from '../charts/faces';
+import { placeTip } from '../tip';
 import jailedCsv from '../data/data_people_jailed_by_country.csv?raw';
 import manBlack from '../assets/ch04/man-black.png';
 import manRed from '../assets/ch04/man-red.png';
@@ -53,7 +55,7 @@ export function buildJailed(): HTMLElement {
   const section = document.createElement('section');
   section.className = 'scene jailed';
   section.dataset.frames = '68–78';
-  section.style.height = '560vh';
+  section.style.height = '470vh';
   section.setAttribute('aria-label', 'Trophy versus amulet, and people jailed for tiger trafficking');
   section.innerHTML = `
     <div class="scene__stage jailed__stage">
@@ -73,6 +75,7 @@ export function buildJailed(): HTMLElement {
         <span class="jailed__total">Total: ${grand} people</span>
       </div>
       <div class="jailed__tip" hidden></div>
+      <div class="jailed__words jailed__words--solid display" aria-hidden="true"><span>People</span><span>Jailed</span></div>
       <div class="jailed__words display" aria-hidden="true" style="background-image:url('${manRed}')"><span>People</span><span>Jailed</span></div>
       <svg class="jailed__drop" aria-hidden="true" viewBox="0 0 100 160"><path d="M50 0C50 40 92 70 92 112a42 42 0 0 1-84 0C8 70 50 40 50 0Z" /></svg>
     </div>`;
@@ -84,13 +87,14 @@ export function buildJailed(): HTMLElement {
   const tip = section.querySelector<HTMLElement>('.jailed__tip')!;
   const black = section.querySelector<HTMLElement>('.jailed__man--black')!;
   const red = section.querySelector<HTMLElement>('.jailed__man--red')!;
-  const words = section.querySelector<HTMLElement>('.jailed__words')!;
+  const solid = section.querySelector<HTMLElement>('.jailed__words--solid')!;
+  const words = section.querySelector<HTMLElement>('.jailed__words:not(.jailed__words--solid)')!;
   const drop = section.querySelector<SVGSVGElement>('.jailed__drop')!;
 
   let trophyG: SVGGElement, jailedG: SVGGElement, grid: SVGGElement;
   let pieces: { el: SVGRectElement; x: number; y: number; r: number }[] = [];
   let dots: SVGElement[] = [];
-  let x0 = 0, x1 = 0, band = 0;
+  let x0 = 0, x1 = 0, band = 0, jy1Px = 0;
 
   function layout() {
     svg.innerHTML = '';
@@ -133,7 +137,14 @@ export function buildJailed(): HTMLElement {
       const b = svgEl('text', { x: pts[pts.length - 1][0] + 8, y: pts[pts.length - 1][1] + 4, fill: color, class: 'jailed__value' }); b.textContent = `${Math.round(l)}%`;
       trophyG.append(a, b);
     }
-    const k = svgEl('text', { x: x0, y: ty1 + 34, class: 'jailed__key' });
+    // years along the bottom, as in the other year charts
+    years.forEach((y, i) => {
+      if (portrait() && i % 5) return;
+      const t = svgEl('text', { x: xc(i), y: ty1 + 20, 'text-anchor': 'middle', class: 'jailed__year' });
+      t.textContent = i === 0 || portrait() ? String(y.year) + (y.partial ? '*' : '') : `'${String(y.year).slice(2)}${y.partial ? '*' : ''}`;
+      trophyG.append(t);
+    });
+    const k = svgEl('text', { x: x0, y: ty1 + 48, class: 'jailed__key' });
     k.innerHTML = `<tspan fill="${C.trophy}">●</tspan> trophy: skins + bones   <tspan fill="${C.amulet}">●</tspan> amulet: claws + teeth   ·   2025 = January–June`;
     trophyG.append(k);
     svg.append(trophyG);
@@ -141,6 +152,7 @@ export function buildJailed(): HTMLElement {
     // ---- people jailed (stacked by country; 2022–2025 no data)
     jailedG = svgEl('g', { class: 'jailed__bars' });
     const jy0 = H * 0.4, jy1 = H * 0.62;
+    jy1Px = jy1;
     const jy = (v: number) => jy1 - (v / 60) * (jy1 - jy0);
     for (const v of [0, 20, 40, 60]) {
       jailedG.append(svgEl('line', { x1: x0, x2: x1, y1: jy(v), y2: jy(v), class: 'jailed__gridline' }));
@@ -195,8 +207,8 @@ export function buildJailed(): HTMLElement {
     tip.dataset.year = String(r.year);
     tip.innerHTML = `<strong>${r.year}</strong> ${r.total} people jailed${r.total ? ' · ' + COUNTRIES.map((c, i) => (r.by[i] ? `${c.label} ${r.by[i]}` : '')).filter(Boolean).join(', ') : ''}`;
     tip.hidden = false;
-    tip.style.left = `${Math.min(vw() - tip.offsetWidth - 10, Math.max(10, x - tip.offsetWidth / 2))}px`;
-    tip.style.top = `${y - 44}px`;
+    const w = band * 0.62;
+    placeTip(tip, new DOMRect(x - w / 2, y - 18, w, jy1Px - y + 18), [legend.getBoundingClientRect(), tJailed.getBoundingClientRect()], ['above', 'right', 'left']);
   }
 
   // ---------------------------------------------------------------- timeline
@@ -215,6 +227,13 @@ export function buildJailed(): HTMLElement {
     const z = 1 + Math.round((zoom.z - 1) * 8) / 8; // pulls back in 8 drawings
     words.style.transform = `scale(${z})`;
   };
+  // the black letters come from behind the viewer: huge (the screen almost all black),
+  // then they shrink onto the man's face, on twos
+  const come = { z: 1 };
+  const renderSolid = () => {
+    const z = Math.exp(Math.round(Math.log(come.z) * 10) / 10);
+    solid.style.transform = `scale(${z})`;
+  };
   const fall = { y: 0 };
   const renderDrop = () => {
     const y = Math.round(fall.y * FPS) / FPS;
@@ -230,7 +249,8 @@ export function buildJailed(): HTMLElement {
     const H = vh();
     tl = gsap.timeline({ paused: true });
     tl.addLabel('hidden')
-      .set([black, red, words, drop], { autoAlpha: 0 }, 0)
+      .set([black, red, words, solid, drop], { autoAlpha: 0 }, 0)
+      .set(stage, { backgroundColor: '' }, 0)
       .fromTo(tTrophy, { autoAlpha: 0, x: -60 }, { autoAlpha: 1, x: 0, duration: 0.5 * D, ease: 'power3.out' }, 0)
       .fromTo(grid, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'steps(3)' }, 0.1 * D)
       .fromTo(trophyG, { opacity: 0 }, { opacity: 1, duration: 0.01 }, 0.2 * D)
@@ -246,28 +266,31 @@ export function buildJailed(): HTMLElement {
       .fromTo(fly, { p: 1 }, { p: 0, duration: 0.8 * D, ease: 'power3.out', onUpdate: renderFly, immediateRender: false }, `trophy+=${0.6 * D}`)
       .fromTo(legend, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, `trophy+=${1.3 * D}`)
       .addLabel('jailed')
-      // 72–74: the man shows through, then he is all there is
+      // 72–74: the chart fades out while the man behind bars comes through
       .call(() => showTip(null), [], 'jailed+=0.01')
-      .fromTo(black, { autoAlpha: 0 }, { autoAlpha: 0.22, duration: 0.5 * D, ease: 'steps(3)' }, 'jailed+=0.01')
-      .to([jailedG, grid, tJailed, legend], { autoAlpha: 0, duration: 0.4 * D, ease: 'steps(3)' }, `jailed+=${0.8 * D}`)
-      .to(black, { autoAlpha: 1, duration: 0.4 * D, ease: 'steps(3)' }, `jailed+=${0.9 * D}`)
-      .addLabel('man')
-      // 75–77: cut to red; the words, the man through them, pulling back
-      .set(red, { autoAlpha: 1 }, 'man+=0.01')
-      .set(black, { autoAlpha: 0 }, 'man+=0.01')
-      .set(stage, { backgroundColor: '#000' }, `man+=${0.35 * D}`)
-      .set(red, { autoAlpha: 0 }, `man+=${0.35 * D}`)
-      .set(words, { autoAlpha: 1 }, `man+=${0.35 * D}`)
-      .fromTo(zoom, { z: 2.6 }, { z: 1, duration: 0.9 * D, ease: 'power3.out', onUpdate: renderWords, immediateRender: false }, `man+=${0.35 * D}`)
+      .to([jailedG, grid, tJailed, legend], { autoAlpha: 0, duration: 0.45 * D, ease: 'steps(4)' }, 'jailed+=0.01')
+      .fromTo(black, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 * D, ease: 'steps(4)' }, `jailed+=${0.15 * D}`)
+      // 75: cut to red on black
+      .set(stage, { backgroundColor: '#000' }, `jailed+=${0.95 * D}`)
+      .set(red, { autoAlpha: 1 }, `jailed+=${0.95 * D}`)
+      .set(black, { autoAlpha: 0 }, `jailed+=${0.95 * D}`)
+      // 75 → 76: PEOPLE JAILED in black comes in huge and settles on his face
+      .set(solid, { autoAlpha: 1 }, `jailed+=${1.0 * D}`)
+      .fromTo(come, { z: 9 }, { z: 1, duration: 1.0 * D, ease: 'power3.out', onUpdate: renderSolid, immediateRender: false }, `jailed+=${1.0 * D}`)
       .addLabel('words')
-      // 78: black; a red drop falls; on to chapter 05 (it starts on black)
-      .to(words, { autoAlpha: 0, duration: 0.3 * D, ease: 'steps(2)' }, 'words+=0.01')
-      .set(drop, { autoAlpha: 1 }, `words+=${0.2 * D}`)
-      .fromTo(fall, { y: 0 }, { y: 1, duration: 0.8 * D, ease: 'power2.in', onUpdate: renderDrop, immediateRender: false }, `words+=${0.2 * D}`)
-      .set(drop, { autoAlpha: 0 }, `words+=${1.0 * D}`)
+      // 77 (on its own): the letters turn into windows on the man, and pull back
+      .set([solid, red], { autoAlpha: 0 }, 'words+=0.01')
+      .set(words, { autoAlpha: 1 }, 'words+=0.01')
+      .fromTo(zoom, { z: 1.15 }, { z: 0.85, duration: 0.8 * D, ease: 'power2.inOut', onUpdate: renderWords, immediateRender: false }, 'words+=0.01')
+      // 78: black; a red drop falls; on to chapter 05 (a black curtain slides away)
+      .to(words, { autoAlpha: 0, duration: 0.25 * D, ease: 'steps(2)' }, `words+=${0.85 * D}`)
+      .set(drop, { autoAlpha: 1 }, `words+=${1.0 * D}`)
+      .fromTo(fall, { y: 0 }, { y: 1, duration: 0.8 * D, ease: 'power2.in', onUpdate: renderDrop, immediateRender: false }, `words+=${1.0 * D}`)
+      .set(drop, { autoAlpha: 0 }, `words+=${1.8 * D}`)
       .addLabel('out');
     renderFly();
     renderWords();
+    renderSolid();
     renderDrop();
     tl.progress(progress);
   }
@@ -277,7 +300,7 @@ export function buildJailed(): HTMLElement {
 
   registerScene({
     section, get tl() { return tl; },
-    labels: ['hidden', 'trophy', 'jailed', 'man', 'words', 'out'], at: [-0.35, 0.9, 1.8, 2.7, 3.6], cutBackFrom: 3, passAt: [4],
+    labels: ['hidden', 'trophy', 'jailed', 'words', 'out'], at: [-0.35, 0.9, 1.8, 2.7], cutBackFrom: 3, passAt: [3],
     onStep: (i) => { explorable = i === 2; stage.classList.toggle('is-explorable', explorable); if (!explorable) showTip(null); },
   } as Parameters<typeof registerScene>[0]);
   return section;

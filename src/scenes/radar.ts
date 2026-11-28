@@ -43,9 +43,10 @@ const MAX = 55; // % at the outer ring (square-root scale)
 const RINGS = [1, 10, 25, 50];
 
 const periods = parseCsv(periodsCsv).map((r) => ({
-  label: r.period, total: Number(r.part_appearances_total),
+  label: r.period, total: Number(r.part_appearances_total), from: Number(r.year_from), to: Number(r.year_to),
   v: AXES.map((a) => Number(r[`pct_${a.key}`])),
 }));
+const periodOf = (year: number) => periods.findIndex((p) => year >= p.from && year <= p.to);
 const yearRows = parseCsv(yearsCsv).map((r) => ({ year: Number(r.year), v: AXES.map((a) => Number(r[`pct_${a.key}`])) }));
 
 function lerpHex(stops: string[], t: number) {
@@ -75,6 +76,7 @@ export function buildRadar(): HTMLElement {
         </ul>
       </header>
       <svg class="radar__svg" aria-hidden="true"></svg>
+      <svg class="radar__mask" aria-hidden="true"><path fill-rule="evenodd" /></svg>
       <div class="radar__years"><i style="background: linear-gradient(90deg, ${YEAR_STOPS.join(',')})"></i><span>2000</span><span>2025</span><small>thin lines: one per year</small></div>
       <ul class="radar__notes">
         <li style="--c:#e2560c"><strong>skins fall from ${r0(val(first, 'Skins'))}% to ${r0(val(last, 'Skins'))}%</strong><em>the trophy loses weight</em></li>
@@ -87,6 +89,7 @@ export function buildRadar(): HTMLElement {
   const legendItems = Array.from(section.querySelectorAll<HTMLElement>('.radar__legend li'));
   const notes = Array.from(section.querySelectorAll<HTMLElement>('.radar__notes li'));
   const yearsKey = section.querySelector<HTMLElement>('.radar__years')!;
+  const maskPath = section.querySelector<SVGPathElement>('.radar__mask path')!;
 
   let chart: SVGGElement, web: SVGGElement, yearLines: SVGPathElement[] = [], shapes: SVGGElement[] = [], groupArcs: SVGGElement;
   let cx = 0, cy = 0, R = 1;
@@ -101,7 +104,7 @@ export function buildRadar(): HTMLElement {
     svg.innerHTML = '';
     const W = vw(), H = vh();
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    cx = portrait() ? W / 2 : W * 0.62;
+    cx = portrait() ? W / 2 : W * 0.57;
     cy = portrait() ? H * 0.56 : H * 0.48;
     R = portrait() ? W * 0.3 : Math.min(H * 0.32, W * 0.21);
     chart = svgEl('g');
@@ -162,27 +165,39 @@ export function buildRadar(): HTMLElement {
     chart.append(web, yg, sg, groupArcs);
     renderGrow();
     renderZoom();
+    renderIris();
   }
 
   // ---------------------------------------------------------------- explore
   let explorable = false;
-  let active: number | null = null;
+  let pinned: number | null = null; // a click keeps a period selected
+  // one period at a time: its shape and its own year lines (one per year) stay;
+  // everything else almost disappears
   function highlight(i: number | null) {
-    active = i;
-    legendItems.forEach((li, k) => li.classList.toggle('is-on', k === i));
+    legendItems.forEach((li, k) => { li.classList.toggle('is-on', k === i); li.classList.toggle('is-pinned', k === pinned); });
+    section.classList.toggle('has-focus', i !== null);
     shapes.forEach((g, k) => {
       g.classList.toggle('is-dim', i !== null && k !== i);
       g.classList.toggle('is-on', k === i);
       if (k === i) g.parentNode!.append(g); // bring it forward
     });
-    yearLines.forEach((p) => p.classList.toggle('is-dim', i !== null));
+    yearLines.forEach((p, k) => {
+      const mine = i !== null && periodOf(yearRows[k].year) === i;
+      p.classList.toggle('is-dim', i !== null && !mine);
+      p.classList.toggle('is-mine', mine);
+    });
   }
+  const pin = (i: number | null) => { pinned = i; highlight(i); };
   legendItems.forEach((li, i) => {
+    li.setAttribute('aria-pressed', 'false');
     li.addEventListener('pointerenter', (e) => { if (explorable && e.pointerType === 'mouse') highlight(i); });
-    li.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') highlight(null); });
-    li.addEventListener('click', () => { if (explorable) highlight(active === i ? null : i); });
-    li.addEventListener('focus', () => { if (explorable) highlight(i); });
-    li.addEventListener('blur', () => highlight(null));
+    li.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') highlight(pinned); });
+    li.addEventListener('click', () => {
+      if (!explorable) return;
+      pin(pinned === i ? null : i);
+      legendItems.forEach((l, k) => l.setAttribute('aria-pressed', String(k === pinned)));
+    });
+    li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); li.click(); } });
   });
 
   // ---------------------------------------------------------------- timeline
@@ -200,6 +215,15 @@ export function buildRadar(): HTMLElement {
     chart.setAttribute('transform', `translate(${cx} ${cy}) scale(${z})`);
   };
 
+  const iris = { p: 0 };
+  const renderIris = () => {
+    const W = vw(), H = vh();
+    const p = Math.round(iris.p * 8) / 8;
+    const far = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 4;
+    const r = far * (1 - p);
+    // the page colour everywhere except a circle that shrinks to nothing
+    maskPath.setAttribute('d', p <= 0 ? '' : `M0,0H${W}V${H}H0Z M${cx - r},${cy}a${r},${r} 0 1,0 ${2 * r},0a${r},${r} 0 1,0 ${-2 * r},0Z`);
+  };
   let tl = gsap.timeline({ paused: true });
   function build() {
     const progress = tl.progress();
@@ -219,10 +243,9 @@ export function buildRadar(): HTMLElement {
       .fromTo([...notes, yearsKey], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.12 }, 2.1 * D)
       .addLabel('in')
       // out: the camera rushes into the shapes
-      .call(() => highlight(null), [], 'in+=0.01')
-      .to([head, ...notes, yearsKey], { opacity: 0, duration: 0.2 }, 'in+=0.01')
-      .fromTo(zoom, { z: 1 }, { z: 6, duration: 0.7 * D, ease: 'power2.in', onUpdate: renderZoom, immediateRender: false }, 'in+=0.01')
-      .to(chart, { opacity: 0, duration: 0.25 * D, ease: 'power2.in' }, `in+=${0.5 * D}`)
+      .call(() => pin(null), [], 'in+=0.01')
+      // out: a mask — a circle closes on the centre of the web, in 8 drawings
+      .fromTo(iris, { p: 0 }, { p: 1, duration: 0.7 * D, ease: 'power2.in', onUpdate: renderIris, immediateRender: false }, 'in+=0.01')
       .addLabel('out');
     tl.progress(progress);
   }
@@ -232,7 +255,7 @@ export function buildRadar(): HTMLElement {
 
   registerScene({
     section, get tl() { return tl; }, labels: ['hidden', 'in', 'out'], at: [-0.35, 1.0], cutBackFrom: 2, passAt: [1],
-    onStep: (i) => { explorable = i === 1; section.classList.toggle('is-explorable', explorable); if (!explorable) highlight(null); },
+    onStep: (i) => { explorable = i === 1; section.classList.toggle('is-explorable', explorable); if (!explorable) pin(null); },
   } as Parameters<typeof registerScene>[0]);
   return section;
 }

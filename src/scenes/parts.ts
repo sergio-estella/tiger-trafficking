@@ -10,12 +10,12 @@
 import { gsap } from 'gsap';
 import { registerScene } from '../engine';
 import skin from '../assets/ch04/part-skin.png';
-import skull from '../assets/ch04/part-skull.png';
-import tooth from '../assets/ch04/part-tooth.png';
-import claw from '../assets/ch04/part-claw.png';
-import bone from '../assets/ch04/part-bone.png';
+import skull from '../assets/ch04/part-skull.svg';
+import tooth from '../assets/ch04/part-tooth.svg';
+import claw from '../assets/ch04/part-claw.svg';
+import bone from '../assets/ch04/part-bone.svg';
 import paw from '../assets/ch04/part-paw.png';
-import ribs from '../assets/ch04/part-ribs.png';
+import ribs from '../assets/ch04/part-ribs.svg';
 import vertebra from '../assets/ch04/part-vertebra.png';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
