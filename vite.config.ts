@@ -6,7 +6,7 @@ export default defineConfig({
   base: './',
   build: {
     rollupOptions: {
-      input: { main: resolve(import.meta.dirname, 'index.html'), about: resolve(import.meta.dirname, 'about.html') },
+      input: { main: resolve(import.meta.dirname, 'index.html'), about: resolve(import.meta.dirname, 'about.html'), dashboard: resolve(import.meta.dirname, 'dashboard.html') },
     },
   },
 });

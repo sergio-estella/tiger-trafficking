@@ -18,7 +18,7 @@ import { registerScene } from '../engine';
 import { EVENTS, parseCsv, years } from '../data/series';
 import { svgEl } from '../charts/faces';
 import { placeTip } from '../tip';
-import jailedCsv from '../data/data_people_jailed_by_country.csv?raw';
+import { COUNTRIES, jailedRows, jailedTotals as totals, jailedGrand as grand, peakNote } from '../data/jailed';
 import manBlack from '../assets/ch04/man-black.png';
 import manSilhouette from '../assets/ch04/man-silhouette.png';
 
@@ -28,27 +28,6 @@ const vw = () => window.innerWidth;
 const vh = () => window.innerHeight;
 const portrait = () => vh() > vw();
 const C = { trophy: '#e2560c', amulet: '#741505', green: '#0b5a50' };
-
-const COUNTRIES = [
-  { key: 'India', label: 'India', color: '#e2560c' },
-  { key: 'China', label: 'China', color: '#ffffff' },
-  { key: 'Indonesia', label: 'Indonesia', color: '#6b3214' },
-  { key: 'Viet Nam', label: 'Viet Nam', color: '#9e220a' },
-  { key: 'Nepal', label: 'Nepal', color: '#6e5a96' },
-  { key: 'Other tiger range countries', label: 'Other countries', color: '#8c8070' },
-];
-const jailedRows = parseCsv(jailedCsv).filter((r) => /^\d{4}$/.test(r.year)).map((r) => ({
-  year: Number(r.year), total: Number(r.Total || 0),
-  by: COUNTRIES.map((c) => Number(r[c.key] || 0)),
-}));
-const totals = COUNTRIES.map((_, i) => jailedRows.reduce((s, r) => s + r.by[i], 0));
-const grand = jailedRows.reduce((s, r) => s + r.total, 0);
-// the two peaks the storyboard points at, worked out from the data
-const peakNote = (year: number) => {
-  const r = jailedRows.find((x) => x.year === year)!;
-  const i = r.by.indexOf(Math.max(...r.by));
-  return `${year}: ${r.by[i]} of ${r.total} in ${COUNTRIES[i].label}`;
-};
 
 export function buildJailed(): HTMLElement {
   const section = document.createElement('section');
