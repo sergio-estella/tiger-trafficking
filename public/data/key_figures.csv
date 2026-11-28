@@ -1,0 +1,8 @@
+figure,value,period,source
+wild_tigers_around_1900,~100000,around 1900,revision brief (Global Tiger Forum)
+wild_tigers_2023,5574,2023 estimate,revision brief; equals sum of wild_tigers_2023 in data_countries.csv
+tigers_seized,3808,2000-Jun 2025,revision brief; whole animals + tigers estimated from parts (TRAFFIC)
+seizures,2551,2000-Jun 2025,revision brief
+people_jailed,387,2000-Jun 2022,revision brief
+people_jailed_by_country_total,375,2000-2021,data_people_jailed_by_country.csv (Total row)
+dead_tigers_units,654,2000-Jun 2022,revision brief

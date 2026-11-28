@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffdd03" />
+    <title>About the data — Tiger Trafficking</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body class="about-page">
+    <header class="about-top">
+      <a class="about-back" href="./">← Back to the story</a>
+      <span class="about-brand display">Tiger Trafficking</span>
+    </header>
+
+    <main class="about">
+      <h1 class="display about__title">About the data</h1>
+      <p class="about__lede">
+        Every number in <em>Tiger Trafficking</em> comes from two published sources: TRAFFIC’s
+        <em>Skin and Bones</em> reports on tiger seizures, and the Global Tiger Forum’s 2023 estimate of wild
+        tigers. This page explains what each figure means, how the charts were calculated and where the data
+        has limits.
+      </p>
+
+      <nav class="about__toc" aria-label="On this page">
+        <ol>
+          <li><a href="#sources">Sources</a></li>
+          <li><a href="#figures">Key figures</a></li>
+          <li><a href="#definitions">Definitions</a></li>
+          <li><a href="#charts">How each chart is made</a></li>
+          <li><a href="#2025">2025: January to June</a></li>
+          <li><a href="#limits">Limits and discrepancies</a></li>
+          <li><a href="#download">Download the data</a></li>
+        </ol>
+      </nav>
+
+      <section id="sources">
+        <h2 class="display">Sources</h2>
+        <dl class="about__sources">
+          <dt>TRAFFIC, <em>Skin and Bones</em> (2025)</dt>
+          <dd>Tiger seizures from January 2000 to June 2025: seizures and tigers seized per year, inside and outside
+            tiger range countries, the parts found in each seizure, and seizures per country 2020 – June 2025
+            (Figures 1, 4 and 10).
+            <a href="https://www.traffic.org/site/assets/files/29537/full_report_skin_and_bones_2025_v5_highres-1.pdf" rel="noopener">Report (PDF)</a></dd>
+          <dt>TRAFFIC, <em>Skin and Bones</em> (2022)</dt>
+          <dd>Tiger trafficking analysis from January 2000 to June 2022: units seized per part (pieces, weights)
+            and people jailed for tiger trafficking.
+            <a href="https://www.traffic.org/site/assets/files/19714/skin_and_bones_tiger_trafficking_analysis_from_january_2000_to_june_2022_r7.pdf#page=42" rel="noopener">Report (PDF)</a></dd>
+          <dt>Global Tiger Forum (2023)</dt>
+          <dd>Wild tigers per country, Global Tiger Day estimate, July 2023.
+            <a href="https://globaltigerforum.org/wp-content/uploads/2023/07/Press-release_Global-Tiger-Day2023_GTF.pdf#page=2" rel="noopener">Press release (PDF)</a></dd>
+        </dl>
+      </section>
+
+      <section id="figures">
+        <h2 class="display">Key figures</h2>
+        <table class="about__table">
+          <thead><tr><th scope="col">Figure</th><th scope="col">Value</th><th scope="col">Period</th><th scope="col">Source</th></tr></thead>
+          <tbody>
+            <tr><td>Wild tigers a century ago</td><td>~100,000</td><td>around 1900</td><td>Global Tiger Forum</td></tr>
+            <tr><td>Wild tigers today</td><td>5,574</td><td>2023 estimate</td><td>Global Tiger Forum (sum of the country estimates)</td></tr>
+            <tr><td>Seizures</td><td>2,551</td><td>January 2000 – June 2025</td><td>TRAFFIC 2025</td></tr>
+            <tr><td>Tigers seized</td><td>3,808</td><td>January 2000 – June 2025</td><td>TRAFFIC 2025 (whole animals + tigers estimated from parts)</td></tr>
+            <tr><td>Dead tigers seized</td><td>654</td><td>January 2000 – June 2022</td><td>TRAFFIC 2022</td></tr>
+            <tr><td>People jailed</td><td>387</td><td>January 2000 – June 2022</td><td>TRAFFIC 2022</td></tr>
+            <tr><td>People jailed, by country</td><td>375</td><td>2000 – 2021</td><td>TRAFFIC 2022 (yearly breakdown)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="definitions">
+        <h2 class="display">Definitions</h2>
+        <dl class="about__defs">
+          <dt>Seizure</dt>
+          <dd>One law-enforcement event in which tigers or tiger parts were confiscated. A seizure can contain
+            several kinds of parts and several tigers.</dd>
+          <dt>Tigers seized</dt>
+          <dd>Whole animals (dead or alive) plus the number of tigers the parts are estimated to come from. It is an
+            estimate and a minimum.</dd>
+          <dt>Part appearance</dt>
+          <dd>A part counted once per seizure it appears in: a seizure with skins and claws adds one to skins and
+            one to claws. The shares of parts are shares of all part appearances.</dd>
+          <dt>Parts</dt>
+          <dd>Skins, bones, skulls, teeth, claws, paws, meat, derivatives (products made from tiger parts),
+            other parts (whiskers and others), dead tigers and live tigers.</dd>
+          <dt>Trophy and amulet</dt>
+          <dd><strong>Trophy</strong> = skins + bones. <strong>Amulet</strong> = claws + teeth. Each as a share
+            (%) of the part appearances of that year.</dd>
+          <dt>Whole animals</dt>
+          <dd>Share (%) of seizures that included dead tigers, live tigers, or both.</dd>
+          <dt>Tiger range countries</dt>
+          <dd>The 13 countries where wild tigers live or lived recently: Bangladesh, Bhutan, Cambodia, China,
+            India, Indonesia, Laos, Malaysia, Myanmar, Nepal, Russia, Thailand and Viet Nam. Seizures elsewhere are
+            “outside the tiger range”.</dd>
+          <dt>Extinct in the wild</dt>
+          <dd>A tiger range country with no wild tigers in the 2023 estimate: Cambodia, Laos and Viet Nam.</dd>
+        </dl>
+      </section>
+
+      <section id="charts">
+        <h2 class="display">How each chart is made</h2>
+        <div class="about__charts">
+          <article>
+            <h3>One face per year</h3>
+            <p>The big head is a Voronoi diagram: one cell per kind of part, its area proportional to the number of
+              seizures that contained it (January 2000 – June 2025). Below, one small head per year, its area
+              proportional to the seizures of that year, its cells to that year’s mix of parts. Units seized
+              (pieces, weights) in the legend cover January 2000 – June 2022.</p>
+          </article>
+          <article>
+            <h3>The trafficking clock</h3>
+            <p>One slice per year, 2000 to 2025, clockwise. Each ring is drawn to its own scale: wild tigers
+              (census line, 2000, 2010, 2016, 2023), seizures and tigers seized (inside and outside the tiger
+              range), the share of seizures outside the range, whole animals, trophy and amulet shares, and people
+              jailed (2000 – 2021).</p>
+          </article>
+          <article>
+            <h3>Year by year</h3>
+            <p>The same year positions in three steps: seizures per year, tigers seized per year, and the share of
+              seizures with whole animals. The strip below gives the share of seizures outside the tiger range.
+              Seizures and tigers are kept apart on purpose: one counts events, the other animals.</p>
+          </article>
+          <article>
+            <h3>What is trafficked</h3>
+            <p>A radar of the share of each part among all part appearances, for five periods: 2000–04, 2005–09,
+              2010–14, 2015–19 and 2020 – June 2025. The radial scale is a square root, so small shares stay
+              visible. The thin lines are single years.</p>
+          </article>
+          <article>
+            <h3>Trophy vs amulet</h3>
+            <p>Skins + bones against claws + teeth, as a share of the part appearances of each year.</p>
+          </article>
+          <article>
+            <h3>People jailed for tiger trafficking</h3>
+            <p>People jailed in tiger range countries, per year and country, 2000 – 2021 (375 in total). There is
+              no yearly breakdown for 2022 – 2025.</p>
+          </article>
+          <article>
+            <h3>Seizures recorded</h3>
+            <p>One hexagon per tiger range country, placed roughly as on a map (not to scale). Green circle: wild
+              tigers in 2023, area proportional to the number; dashed when there are none. Hatched fill: share of
+              seizures with whole animals, 2020 – June 2025. Each thread runs from a year to a country; its width is
+              the seizures of that country that year. Grey hexagons: seizures outside the tiger range,
+              January 2000 – June 2025, without a yearly breakdown.</p>
+          </article>
+          <article>
+            <h3>Where tigers still live</h3>
+            <p>The map shows tiger range countries with wild tigers in 2023, those with none, and countries outside
+              the range. Circles: wild tigers in 2023 (Global Tiger Forum). Country cards: seizures January 2000 –
+              June 2025 (TRAFFIC).</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="2025">
+        <h2 class="display">2025: January to June</h2>
+        <p>The 2025 figures cover only the first half of the year and are drawn dashed or marked with an asterisk.
+          The yearly table has no 2025 totals, so they were worked out from the overall totals:</p>
+        <ul>
+          <li>Seizures 2025 = 2,551 − seizures 2000–2024 = <strong>33</strong>.</li>
+          <li>Seizures in tiger range countries 2025 = sum of the country figures for January – June 2025 =
+            <strong>30</strong>, so <strong>3</strong> outside the range.</li>
+          <li>Tigers seized 2025 = 3,808 − tigers seized 2000–2024 = <strong>33</strong>, with no split between
+            inside and outside the range.</li>
+        </ul>
+      </section>
+
+      <section id="limits">
+        <h2 class="display">Limits and discrepancies</h2>
+        <ul>
+          <li><strong>Seizures are not trafficking.</strong> They show what was found, which depends on how hard
+            authorities looked and how much they reported. More seizures can mean more enforcement, not more
+            trade.</li>
+          <li><strong>People jailed: 387 or 375.</strong> 387 covers January 2000 – June 2022; 375 is the total of
+            the yearly breakdown by country, 2000 – 2021. They cover different periods and do not contradict each
+            other; each is shown with its own period.</li>
+          <li><strong>Units seized</strong> (1,313 skins, 11,528 bones, 654 dead tigers…) cover January 2000 –
+            June 2022, while everything else runs to June 2025. Derivatives and skulls have no units.</li>
+          <li><strong>Tigers seized</strong> includes tigers estimated from parts: a minimum, not a count.</li>
+          <li><strong>Wild tigers</strong>: the country estimates of 2023 add up to 5,574, the figure used across
+            the story (“about 5,600”).</li>
+          <li><strong>Positions</strong> in the hexagon chart are approximate, not a map to scale.</li>
+        </ul>
+      </section>
+
+      <section id="download">
+        <h2 class="display">Download the data</h2>
+        <p>The tables behind every chart, as CSV.</p>
+        <ul class="about__files">
+          <li><a href="./data/data_by_year.csv" download>data_by_year.csv</a> <span>one row per year, 2000–2025: parts, seizures, tigers, people jailed, wild tigers, events</span></li>
+          <li><a href="./data/data_countries.csv" download>data_countries.csv</a> <span>one row per country: seizures and tigers, 2020–25 by year, whole animals, wild tigers 2023</span></li>
+          <li><a href="./data/data_people_jailed_by_country.csv" download>data_people_jailed_by_country.csv</a> <span>people jailed per year and country, 2000–2021</span></li>
+          <li><a href="./data/derived_by_year.csv" download>derived_by_year.csv</a> <span>totals and shares per year (whole animals, trophy, amulet, tigers per seizure)</span></li>
+          <li><a href="./data/derived_part_shares_by_year.csv" download>derived_part_shares_by_year.csv</a> <span>share of each part, per year</span></li>
+          <li><a href="./data/derived_part_shares_by_period.csv" download>derived_part_shares_by_period.csv</a> <span>share of each part, per period</span></li>
+          <li><a href="./data/parts_head_legend.csv" download>parts_head_legend.csv</a> <span>seizures per part and units seized</span></li>
+          <li><a href="./data/key_figures.csv" download>key_figures.csv</a> <span>headline figures with period and source</span></li>
+          <li><a href="./data/tiger-map-countries.csv" download>tiger-map-countries.csv</a> <span>the map: country figures with source links</span></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="about-foot">
+      <a class="about-back" href="./">← Back to the story</a>
+    </footer>
+
+    <script type="module" src="/src/about.ts"></script>
+  </body>
+</html>
