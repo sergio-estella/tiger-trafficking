@@ -18,7 +18,12 @@ import { buildJailed } from './scenes/jailed';
 import { buildSeizures } from './scenes/seizures';
 import { story, type From, type Opener, type Placeholder } from './content/chapters';
 import headUrl from './assets/tiger-head.svg?url';
-import walkSvg from './assets/walk/frame-01.svg?raw'; // one drawing; its four legs swing as rigid pieces
+import walk1 from './assets/walk/frame-01.svg?raw'; // six drawn poses of a calm walk (35 units forward each)
+import walk2 from './assets/walk/frame-02.svg?raw';
+import walk3 from './assets/walk/frame-03.svg?raw';
+import walk4 from './assets/walk/frame-04.svg?raw';
+import walk5 from './assets/walk/frame-05.svg?raw';
+import walk6 from './assets/walk/frame-06.svg?raw';
 import shotUrl from './assets/walk/tiger-shot.svg?url'; // the shot tiger, lying down (storyboard artwork)
 import splashUrl from './assets/ink-splash.svg?url';
 import { gunshot } from './sound';
@@ -123,6 +128,21 @@ function buildPlaceholder(p: Placeholder): HTMLElement {
 }
 
 /**
+ * The walk: six drawings, same framing, scale and ground; in each one the tiger
+ * stands 35 units further right. Each drawing is shifted back by its advance, so
+ * the six stack on the same spot and the walker element carries the motion.
+ */
+const WALK_STEP = 35; // units forward per drawing
+const WALK_BOX = { x: 20, y: 50, w: 570, h: 268 }; // crop around the tiger (ratio 0.47, as the walker box)
+function walkRig() {
+  const inner = [walk1, walk2, walk3, walk4, walk5, walk6].map((svg, i) => {
+    const body = svg.replace(/^[\s\S]*?<g id="tiger"[^>]*>/, '').replace(/<\/g>\s*<\/svg>\s*$/, '');
+    return `<g class="walker__pose" transform="translate(${-WALK_STEP * i} 0)"${i ? ' style="display:none"' : ''}>${body}</g>`;
+  }).join('');
+  return `<svg viewBox="${WALK_BOX.x} ${WALK_BOX.y} ${WALK_BOX.w} ${WALK_BOX.h}" aria-hidden="true">${inner}</svg>`;
+}
+
+/**
  * 00 · Intro + 01 (frames 1–15), one scene on one pale stage:
  *  hidden → in      title fades in (1 → 3) and waits
  *  in → ch01        scroll: zoom into the tiger's face until it disappears (4 → 8);
@@ -161,7 +181,7 @@ function buildIntro(): HTMLElement {
         </div>
         <p class="opener__body opener__body--next ch01__second">Habitat loss and poaching have driven the decline. Seizure records reveal what happens to some of the tigers caught up in the illegal trade.</p>
         <div class="walker" aria-hidden="true">
-          <div class="walker__rig">${walkSvg}</div>
+          <div class="walker__rig">${walkRig()}</div>
           <img class="walker__shot" src="${shotUrl}" alt="" />
         </div>
         <img class="splash" src="${splashUrl}" alt="" aria-hidden="true" />
@@ -174,33 +194,13 @@ function buildIntro(): HTMLElement {
   const first = q('.ch01__first'), second = q('.ch01__second'), number = q('.ch01__number');
   const walker = q('.walker'), shot = q('.walker__shot'), splash = q('.splash'), black = q('.intro__black');
   const rig = q('.walker__rig');
-  // Cut-out walk: each leg (upper, lower, paw and their backings) becomes one rigid piece
-  // that swings from the hip — no knees, comic style
-  const HIPS: Record<string, [number, number]> = {
-    'hind-far': [737, 540], 'front-far': [1240, 494], 'hind-near': [515, 539], 'front-near': [1182, 514],
-  };
-  const legs = Object.entries(HIPS).map(([id, hip]) => {
-    const parts = Array.from(rig.querySelectorAll<SVGGElement>(`g[id^="${id}-"]`));
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    parts[0].before(g);
-    g.append(...parts);
-    return { id, hip, g };
-  });
-  const rigSvg = rig.querySelector('svg')!;
-  rigSvg.removeAttribute('width'); rigSvg.removeAttribute('height');
-  const body = Array.from(rig.querySelectorAll<SVGGElement>('#body, #head, #tail'));
-  // Two drawings per stride: diagonal pairs swap (negative = foot forward)
-  const POSES: Record<string, number>[] = [
-    { 'front-near': -15, 'hind-far': -13, 'front-far': 11, 'hind-near': 13 },
-    { 'front-near': 11, 'hind-far': 13, 'front-far': -15, 'hind-near': -13 },
-  ];
-  const pose = (n: number | null) => {
-    for (const l of legs) {
-      const a = n === null ? 0 : POSES[n][l.id];
-      l.g.setAttribute('transform', `rotate(${a} ${l.hip[0]} ${l.hip[1]})`);
-    }
-    // the body dips a touch on each planted step
-    for (const b of body) b.setAttribute('transform', n === null ? '' : `translate(0 ${n ? 8 : 0})`);
+  const poses = Array.from(rig.querySelectorAll<SVGGElement>('.walker__pose'));
+  let shownPose = 0;
+  const pose = (n: number) => {
+    if (n === shownPose) return;
+    poses[shownPose].style.display = 'none';
+    poses[n].style.display = '';
+    shownPose = n;
   };
   const menuBtn = document.querySelector<HTMLElement>('.menu-btn');
 
@@ -212,19 +212,22 @@ function buildIntro(): HTMLElement {
   // Walking tiger: 390×195 at the bottom (frames 11–12); bigger on phones
   const tigerW = () => (portrait() ? vw() * 0.62 : 390 * k());
   const tigerTop = () => vh() - tigerW() * 0.5 - (portrait() ? vh() * 0.06 : 0);
-  const startX = () => (portrait() ? -tigerW() * 0.7 : fx(20) - tigerW() * 0.55);
   const endX = () => (portrait() ? (vw() - tigerW()) / 2 : fx(678));
 
   const D = reduced ? 0.01 : 1;
-  const WALK = 2.6; // a slow walk in, then it stops
+  // One drawing every 1/12 s (comic, on twos) and the tiger moves exactly the 35 units its
+  // drawings advance, so the paws never slide. It walks in from off-screen and stops on
+  // drawing 1: the number of drawings is a whole number of cycles.
+  const RATE = 12;
+  const stepPx = () => (WALK_STEP / WALK_BOX.w) * tigerW();
+  const drawings = () => Math.ceil((endX() + tigerW() * 0.5) / stepPx() / 6) * 6; // starts half off-screen
+  const WALK = drawings() / RATE;
   const walkClock = { t: 0 };
-  const STEPS = 3;  // leg drawings per second: each step is one whole-leg swing
-  const MOVE = 6;   // the body slides on at 6 drawings per second
   const renderWalk = () => {
-    const t = walkClock.t;
-    const u = Math.min(1, Math.floor(t * MOVE + 1e-6) / MOVE / WALK);
-    gsap.set(walker, { x: startX() + (endX() - startX()) * u, y: tigerTop(), width: tigerW(), height: tigerW() * 0.47 });
-    pose(u >= 1 || t <= 0 ? null : Math.floor(t * STEPS) % 2); // standing still once it arrives
+    const n = Math.min(drawings(), Math.floor(walkClock.t * RATE + 1e-6));
+    const x = endX() - (drawings() - n) * stepPx();
+    gsap.set(walker, { x, y: tigerTop(), width: tigerW(), height: tigerW() * 0.47 });
+    pose(n % 6); // drawing 1 when it stands still
   };
   // Splash: born on the tiger's shoulder (frame 12), then covers the centre (frame 13)
   const small = () => ({ size: portrait() ? vw() * 0.75 : 445 * k(), x: endX() + tigerW() * 0.64, y: tigerTop() + tigerW() * 0.1 });
