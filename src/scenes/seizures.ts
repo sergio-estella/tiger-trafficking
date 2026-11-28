@@ -249,59 +249,68 @@ export function buildSeizures(): HTMLElement {
   }
 
   // ---------------------------------------------------------------- blood
-  // Drops hang from the top edge and stretch down; then the red rises from the bottom
-  let drops: { el: SVGPathElement; x: number; len: number; w: number }[] = [];
+  // As drawn in 87–91: long angular drops (a needle tail on top, a faceted bulb below)
+  // fall through the page, few at first and then more and more, while the red rises
+  // from the bottom with a jagged edge; drops that reach it sink in and leave spikes.
+  type Drop = { el: SVGPathElement; x: number; w: number; len: number; t0: number; v: number };
+  let drops: Drop[] = [];
   let flood: SVGPathElement;
-  const N = 18;
-  const dropD = (w: number, len: number) => {
-    // a thin streak from the top edge that swells into a pointed drop
-    const h = w * 1.5;
-    return `M${-w * 0.08},0 C${-w * 0.1},${len * 0.5} ${-w * 0.5},${len - h * 0.6} ${-w * 0.5},${len - h * 0.25} C${-w * 0.5},${len + h * 0.1} ${-w * 0.2},${len + h * 0.35} 0,${len + h * 0.45} C${w * 0.2},${len + h * 0.35} ${w * 0.5},${len + h * 0.1} ${w * 0.5},${len - h * 0.25} C${w * 0.5},${len - h * 0.6} ${w * 0.1},${len * 0.5} ${w * 0.08},0Z`;
+  const N = 46;
+  const T_RAIN = 1.7;   // the last drop starts falling here
+  const T_FLOOD = [0.55, 2.35] as const;
+  const dropD = (w: number, L: number) => {
+    const h = w / 2;
+    return `M0,0 L${h * 0.22},${L * 0.45} L${h * 0.62},${L * 0.72} L${h},${L * 0.86} L${h * 0.55},${L} L${-h * 0.55},${L} L${-h},${L * 0.86} L${-h * 0.62},${L * 0.72} L${-h * 0.22},${L * 0.45}Z`;
   };
+  // a fixed shuffle, so every run (and every rebuild) looks the same
+  const rnd = (i: number, k: number) => { const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return v - Math.floor(v); };
   function buildBlood() {
     blood.innerHTML = '';
     const W = vw(), H = vh();
+    const u = Math.max(W / 1440, H / 900);
     blood.setAttribute('viewBox', `0 0 ${W} ${H}`);
     drops = [];
     for (let i = 0; i < N; i++) {
-      // spread over the width, not in order
-      const x = W * (0.04 + 0.92 * (((i * 7) % N) / (N - 1)));
-      const w = Math.min(W, H) * (0.045 + ((i * 13) % 5) * 0.008);
-      const len = H * (0.12 + ((i * 29) % 11) / 18);
+      const w = (38 + rnd(i, 1) * 34) * u;
+      const len = w * (4.5 + rnd(i, 2) * 4);
       const el = svgEl('path', { d: dropD(w, len), class: 'seizures__drop' });
       blood.append(el);
-      drops.push({ el, x, len, w });
+      drops.push({
+        el, w, len,
+        x: W * (0.03 + 0.94 * rnd(i, 3)),
+        t0: T_RAIN * Math.pow(i / N, 0.6),          // far apart first, then faster and faster
+        v: H * (0.9 + rnd(i, 4) * 0.8),              // px / s when it lets go
+      });
     }
     flood = svgEl('path', { class: 'seizures__drop' });
-    blood.append(flood);
+    blood.append(flood); // on top: the drops sink into it, their tails stick out as spikes
     renderBlood();
   }
   const bl = { t: 0 };
-  const T_DROPS = 1.5;
-  const start = (i: number) => T_DROPS * Math.pow(i / N, 0.55); // far apart first, then faster and faster
+  const floodTop = (t: number) => {
+    const H = vh();
+    const f = Math.max(0, Math.min(1, (t - T_FLOOD[0]) / (T_FLOOD[1] - T_FLOOD[0])));
+    return H * (1.02 - 1.15 * f * f * (3 - 2 * f));
+  };
   const renderBlood = () => {
     const W = vw(), H = vh();
-    const t = Math.floor(bl.t * FPS + 1e-6) / FPS;
-    drops.forEach((d, i) => {
-      const u = Math.max(0, Math.min(1, (t - start(i)) / 0.35));
-      d.el.style.visibility = u > 0 ? 'visible' : 'hidden';
-      // it drips: the streak grows from the top, then keeps sliding slowly
-      const s = 1 - Math.pow(1 - u, 2);
-      const more = Math.max(0, t - start(i) - 0.35) * 0.25 * H; // then it keeps running down, still hanging from the top
-      d.el.setAttribute('transform', `translate(${d.x} 0) scale(1 ${Math.max(0.02, s + more / d.len)})`);
-    });
-    // the red rises from the bottom with a jagged edge (89 → 91)
-    const f = Math.max(0, Math.min(1, (t - 1.15) / 0.85));
-    const e = f * f * (3 - 2 * f);
-    const top = H * (1.05 - 1.2 * e);
-    let d = `M0,${H}`;
-    const n = 9;
-    for (let i = 0; i <= n; i++) {
-      const jag = ((i * 37) % 7) / 7 - 0.5;
-      d += `L${(W * i) / n},${top + jag * H * 0.08}`;
+    const t = Math.floor(bl.t * FPS + 1e-6) / FPS; // on twos
+    for (const d of drops) {
+      const a = t - d.t0;
+      if (a < 0) { d.el.style.visibility = 'hidden'; continue; }
+      // it swells at the top edge for a moment (the drip), then lets go and falls faster and faster
+      const swell = Math.min(1, a / 0.12);
+      const fall = Math.max(0, a - 0.12);
+      const y = -d.len + d.len * 0.35 * swell + d.v * fall + 0.5 * 2.2 * H * fall * fall;
+      d.el.style.visibility = y > H ? 'hidden' : 'visible';
+      d.el.setAttribute('transform', `translate(${d.x.toFixed(1)} ${y.toFixed(1)})`);
     }
-    d += `L${W},${H}Z`;
-    flood.setAttribute('d', f > 0 ? d : '');
+    const top = floodTop(t);
+    if (top >= H) { flood.setAttribute('d', ''); return; }
+    let d = `M0,${H + 2}`;
+    const n = 12;
+    for (let i = 0; i <= n; i++) d += `L${((W * i) / n).toFixed(1)},${(top + (rnd(i, 9) - 0.5) * H * 0.07).toFixed(1)}`;
+    flood.setAttribute('d', `${d}L${W},${H + 2}Z`);
   };
 
   // ---------------------------------------------------------------- timeline
@@ -322,7 +331,7 @@ export function buildSeizures(): HTMLElement {
       .addLabel('in')
       // 87 → 91: blood
       .call(() => { pinned = null; focus(null); }, [], 'in+=0.01')
-      .fromTo(bl, { t: 0 }, { t: 2.1, duration: 2.1 * D, ease: 'none', onUpdate: renderBlood, immediateRender: false }, 'in+=0.01')
+      .fromTo(bl, { t: 0 }, { t: 2.45, duration: 2.45 * D, ease: 'none', onUpdate: renderBlood, immediateRender: false }, 'in+=0.01')
       .addLabel('out');
     renderBlood();
     tl.progress(progress);

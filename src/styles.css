@@ -545,20 +545,18 @@ html, body { background: var(--pale); }
 .jailed__total { font-weight: 700; color: #0b5a50; }
 .jailed__tip { position: absolute; padding: 6px 10px; background: #111; color: #fff; font: 400 13px var(--body); white-space: nowrap; pointer-events: none; }
 .jailed__tip strong { color: var(--yellow); margin-right: 6px; }
-.jailed__words { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: min(36vh, 24vw); line-height: 0.8; text-transform: uppercase; color: transparent; background: center / cover no-repeat; -webkit-background-clip: text; background-clip: text; transform-origin: 50% 50%; }
-.jailed__words--solid { color: #000; background: none; -webkit-background-clip: border-box; background-clip: border-box; font-size: min(50vh, 33vw); line-height: 0.78; }
+.jailed__words { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: min(44vh, 31vw); line-height: 0.78; text-transform: uppercase; color: #000; transform-origin: 50% 45%; white-space: nowrap; }
+.jailed__words span { display: block; }
+.jailed__man--silhouette { transform-origin: 50% 22%; }
 .jailed__year { font: 400 11px 'Roboto Mono', ui-monospace, monospace; fill: #111; }
-.jailed__drop { position: absolute; right: 8vw; top: 0; width: 9vw; fill: #ff0f0f; transform-origin: 50% 0; }
 @media (orientation: portrait) {
   .jailed__title { left: 6vw; right: 6vw; top: 12vh; }
   .jailed__title--jailed { top: 18vh; }
   .jailed__title p { font-size: 11px; }
   .jailed__legend { font-size: 11px; gap: 4px 12px; right: 6vw; }
   .jailed__count { font-size: 8px; }
-  .jailed__words { font-size: 22vw; }
-  .jailed__words--solid { font-size: 30vw; }
-  .jailed__drop { width: 20vw; }
-}
+  .jailed__words { font-size: 30vw; }
+    }
 
 /* ---------------------------------------------------------------- 06 · seizures recorded (86–91) */
 .seizures__stage { background: var(--pale); color: #111; }

@@ -6,13 +6,12 @@
  *  trophy → jailed   it slides up and away; "People jailed for tiger trafficking"
  *                    comes up and its bars land in pieces (70–71); HOLD · EXPLORE
  *                    (hover / tap a year)
- *  jailed → words  the chart fades out while the man behind bars comes through
- *                    (72–74); cut to red on black (75); PEOPLE JAILED in black comes
- *                    in huge, the screen almost all black, and settles on his face
- *                    (76); HOLD · READ
- *  words → out       on its own: the letters turn into windows on the man and pull
- *                    back (77); black, a red drop falls (78); chapter 05 follows,
- *                    a black curtain sliding away to the left (79–80)
+ *  jailed → words  the chart fades out (72–73); PEOPLE JAILED in black comes in
+ *                    huge, the man behind bars showing through faintly, then fully;
+ *                    the letters settle on his face and turn red (74–76); HOLD · READ
+ *  words → out       on its own: the words split left and right (77), cut to his
+ *                    silhouette on black (78), the camera rushes into it until the
+ *                    page is all pale (79); chapter 05 follows (80)
  */
 import { gsap } from 'gsap';
 import { registerScene } from '../engine';
@@ -21,7 +20,7 @@ import { svgEl } from '../charts/faces';
 import { placeTip } from '../tip';
 import jailedCsv from '../data/data_people_jailed_by_country.csv?raw';
 import manBlack from '../assets/ch04/man-black.png';
-import manRed from '../assets/ch04/man-red.png';
+import manSilhouette from '../assets/ch04/man-silhouette.png';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FPS = 12;
@@ -60,7 +59,7 @@ export function buildJailed(): HTMLElement {
   section.innerHTML = `
     <div class="scene__stage jailed__stage">
       <div class="jailed__man jailed__man--black" style="background-image:url('${manBlack}')" aria-hidden="true"></div>
-      <div class="jailed__man jailed__man--red" style="background-image:url('${manRed}')" aria-hidden="true"></div>
+      <div class="jailed__man jailed__man--silhouette" style="background-image:url('${manSilhouette}')" aria-hidden="true"></div>
       <header class="jailed__title jailed__title--trophy">
         <h2 class="display">Trophy vs amulet</h2>
         <p>Skins + bones vs claws + teeth · % of part records per year</p>
@@ -75,9 +74,7 @@ export function buildJailed(): HTMLElement {
         <span class="jailed__total">Total: ${grand} people</span>
       </div>
       <div class="jailed__tip" hidden></div>
-      <div class="jailed__words jailed__words--solid display" aria-hidden="true"><span>People</span><span>Jailed</span></div>
-      <div class="jailed__words display" aria-hidden="true" style="background-image:url('${manRed}')"><span>People</span><span>Jailed</span></div>
-      <svg class="jailed__drop" aria-hidden="true" viewBox="0 0 100 160"><path d="M50 0C50 40 92 70 92 112a42 42 0 0 1-84 0C8 70 50 40 50 0Z" /></svg>
+      <div class="jailed__words display" aria-hidden="true"><span>People</span><span>Jailed</span></div>
     </div>`;
   const stage = section.querySelector<HTMLElement>('.jailed__stage')!;
   const svg = section.querySelector<SVGSVGElement>('.jailed__svg')!;
@@ -86,12 +83,12 @@ export function buildJailed(): HTMLElement {
   const legend = section.querySelector<HTMLElement>('.jailed__legend')!;
   const tip = section.querySelector<HTMLElement>('.jailed__tip')!;
   const black = section.querySelector<HTMLElement>('.jailed__man--black')!;
-  const red = section.querySelector<HTMLElement>('.jailed__man--red')!;
-  const solid = section.querySelector<HTMLElement>('.jailed__words--solid')!;
-  const words = section.querySelector<HTMLElement>('.jailed__words:not(.jailed__words--solid)')!;
-  const drop = section.querySelector<SVGSVGElement>('.jailed__drop')!;
+  const silhouette = section.querySelector<HTMLElement>('.jailed__man--silhouette')!;
+  const words = section.querySelector<HTMLElement>('.jailed__words')!;
+  const [wPeople, wJailed] = Array.from(words.querySelectorAll<HTMLElement>('span'));
 
   let trophyG: SVGGElement, jailedG: SVGGElement, grid: SVGGElement;
+  let gridLines: SVGLineElement[] = [], gridEvents: SVGRectElement[] = [];
   let pieces: { el: SVGRectElement; x: number; y: number; r: number }[] = [];
   let dots: SVGElement[] = [];
   let x0 = 0, x1 = 0, band = 0, jy1Px = 0;
@@ -106,9 +103,16 @@ export function buildJailed(): HTMLElement {
 
     // background grid: one thin line per year, yellow event columns (frames 70–73)
     grid = svgEl('g', { class: 'jailed__grid' });
+    gridLines = []; gridEvents = [];
     years.forEach((y, i) => {
-      if (EVENTS[y.year]) grid.append(svgEl('rect', { x: x0 + band * i + band * 0.1, y: 0, width: band * 0.8, height: H, class: 'jailed__event' }));
-      grid.append(svgEl('line', { x1: xc(i), x2: xc(i), y1: 0, y2: H, class: 'jailed__vline' }));
+      if (EVENTS[y.year]) {
+        const r = svgEl('rect', { x: x0 + band * i + band * 0.1, y: 0, width: band * 0.8, height: H, class: 'jailed__event' });
+        grid.append(r);
+        gridEvents.push(r);
+      }
+      const l = svgEl('line', { x1: xc(i), x2: xc(i), y1: 0, y2: H, class: 'jailed__vline' });
+      grid.append(l);
+      gridLines.push(l);
     });
     svg.append(grid);
 
@@ -222,22 +226,18 @@ export function buildJailed(): HTMLElement {
       f.el.setAttribute('transform', `translate(${f.x * p} ${f.y * p}) rotate(${f.r * p} ${x} ${y})`);
     }
   };
-  const zoom = { z: 1 };
+  // the letters come from behind the viewer: huge (the screen almost all black), then
+  // they shrink onto the man's face, on twos
+  const come = { z: 1 };
   const renderWords = () => {
-    const z = 1 + Math.round((zoom.z - 1) * 8) / 8; // pulls back in 8 drawings
+    const z = Math.exp(Math.round(Math.log(come.z) * 10) / 10);
     words.style.transform = `scale(${z})`;
   };
-  // the black letters come from behind the viewer: huge (the screen almost all black),
-  // then they shrink onto the man's face, on twos
-  const come = { z: 1 };
-  const renderSolid = () => {
-    const z = Math.exp(Math.round(Math.log(come.z) * 10) / 10);
-    solid.style.transform = `scale(${z})`;
-  };
-  const fall = { y: 0 };
-  const renderDrop = () => {
-    const y = Math.round(fall.y * FPS) / FPS;
-    drop.style.transform = `translateY(${(-0.3 + y * 1.4) * vh()}px) scale(${1 + y * 0.6})`;
+  // 78 → 79: the camera rushes into the man's silhouette until it is all the page colour
+  const rush = { z: 1 };
+  const renderRush = () => {
+    const z = 1 + Math.round((rush.z - 1) * 2) / 2;
+    silhouette.style.transform = `scale(${z})`;
   };
 
   let tl = gsap.timeline({ paused: true });
@@ -249,10 +249,12 @@ export function buildJailed(): HTMLElement {
     const H = vh();
     tl = gsap.timeline({ paused: true });
     tl.addLabel('hidden')
-      .set([black, red, words, solid, drop], { autoAlpha: 0 }, 0)
+      .set([black, silhouette, words], { autoAlpha: 0 }, 0)
       .set(stage, { backgroundColor: '' }, 0)
       .fromTo(tTrophy, { autoAlpha: 0, x: -60 }, { autoAlpha: 1, x: 0, duration: 0.5 * D, ease: 'power3.out' }, 0)
-      .fromTo(grid, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'steps(3)' }, 0.1 * D)
+      // 68: the year lines grow up from the bottom, one after another
+      .fromTo(gridLines, { attr: { y1: H } }, { attr: { y1: 0 }, duration: 0.35 * D, ease: 'steps(4)', stagger: 0.025 * D }, 0)
+      .fromTo(gridEvents, { attr: { y: H } }, { attr: { y: 0 }, duration: 0.35 * D, ease: 'steps(4)', stagger: 0.08 * D }, 0.1 * D)
       .fromTo(trophyG, { opacity: 0 }, { opacity: 1, duration: 0.01 }, 0.2 * D)
       .fromTo(dots, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.17, ease: 'steps(2)', stagger: 0.02 }, 0.25 * D)
       .set(jailedG, { opacity: 0 }, 0)
@@ -266,32 +268,33 @@ export function buildJailed(): HTMLElement {
       .fromTo(fly, { p: 1 }, { p: 0, duration: 0.8 * D, ease: 'power3.out', onUpdate: renderFly, immediateRender: false }, `trophy+=${0.6 * D}`)
       .fromTo(legend, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, `trophy+=${1.3 * D}`)
       .addLabel('jailed')
-      // 72–74: the chart fades out while the man behind bars comes through
+      // 72–73: the chart fades out
       .call(() => showTip(null), [], 'jailed+=0.01')
       .to([jailedG, grid, tJailed, legend], { autoAlpha: 0, duration: 0.45 * D, ease: 'steps(4)' }, 'jailed+=0.01')
-      .fromTo(black, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 * D, ease: 'steps(4)' }, `jailed+=${0.15 * D}`)
-      // 75: cut to red on black
-      .set(stage, { backgroundColor: '#000' }, `jailed+=${0.95 * D}`)
-      .set(red, { autoAlpha: 1 }, `jailed+=${0.95 * D}`)
-      .set(black, { autoAlpha: 0 }, `jailed+=${0.95 * D}`)
-      // 75 → 76: PEOPLE JAILED in black comes in huge and settles on his face
-      .set(solid, { autoAlpha: 1 }, `jailed+=${1.0 * D}`)
-      .fromTo(come, { z: 9 }, { z: 1, duration: 1.0 * D, ease: 'power3.out', onUpdate: renderSolid, immediateRender: false }, `jailed+=${1.0 * D}`)
+      // 74–75: PEOPLE JAILED in black comes in huge, the man shows through faintly and then fully
+      .fromTo(black, { autoAlpha: 0 }, { autoAlpha: 0.25, duration: 0.25 * D, ease: 'steps(2)' }, `jailed+=${0.35 * D}`)
+      .set(words, { autoAlpha: 1, color: '#000' }, `jailed+=${0.4 * D}`)
+      .fromTo(come, { z: 9 }, { z: 1, duration: 1.0 * D, ease: 'power3.out', onUpdate: renderWords, immediateRender: false }, `jailed+=${0.4 * D}`)
+      .to(black, { autoAlpha: 1, duration: 0.4 * D, ease: 'steps(3)' }, `jailed+=${0.8 * D}`)
+      // 76: the letters turn red over his face; HOLD
+      .set(words, { color: '#ff0000' }, `jailed+=${1.4 * D}`)
       .addLabel('words')
-      // 77 (on its own): the letters turn into windows on the man, and pull back
-      .set([solid, red], { autoAlpha: 0 }, 'words+=0.01')
-      .set(words, { autoAlpha: 1 }, 'words+=0.01')
-      .fromTo(zoom, { z: 1.15 }, { z: 0.85, duration: 0.8 * D, ease: 'power2.inOut', onUpdate: renderWords, immediateRender: false }, 'words+=0.01')
-      // 78: black; a red drop falls; on to chapter 05 (a black curtain slides away)
-      .to(words, { autoAlpha: 0, duration: 0.25 * D, ease: 'steps(2)' }, `words+=${0.85 * D}`)
-      .set(drop, { autoAlpha: 1 }, `words+=${1.0 * D}`)
-      .fromTo(fall, { y: 0 }, { y: 1, duration: 0.8 * D, ease: 'power2.in', onUpdate: renderDrop, immediateRender: false }, `words+=${1.0 * D}`)
-      .set(drop, { autoAlpha: 0 }, `words+=${1.8 * D}`)
+      // 77: the words split, PEOPLE to the left and JAILED to the right
+      .fromTo(wPeople, { x: 0 }, { x: () => -vw() * 0.9, duration: 0.6 * D, ease: 'power2.in' }, 'words+=0.01')
+      .fromTo(wJailed, { x: 0 }, { x: () => vw() * 0.9, duration: 0.6 * D, ease: 'power2.in' }, 'words+=0.01')
+      // 78: cut to his silhouette in the page colour on black
+      .set(stage, { backgroundColor: '#000' }, `words+=${0.3 * D}`)
+      .set(silhouette, { autoAlpha: 1 }, `words+=${0.3 * D}`)
+      .set(black, { autoAlpha: 0 }, `words+=${0.3 * D}`)
+      // 79: the camera rushes into it until the page is all pale; chapter 05 follows
+      .fromTo(rush, { z: 1 }, { z: 14, duration: 0.7 * D, ease: 'power3.in', onUpdate: renderRush, immediateRender: false }, `words+=${0.55 * D}`)
+      .set(words, { autoAlpha: 0 }, `words+=${0.65 * D}`)
+      .set(stage, { backgroundColor: 'var(--pale)' }, `words+=${1.25 * D}`)
+      .set(silhouette, { autoAlpha: 0 }, `words+=${1.25 * D}`)
       .addLabel('out');
     renderFly();
     renderWords();
-    renderSolid();
-    renderDrop();
+    renderRush();
     tl.progress(progress);
   }
   build();

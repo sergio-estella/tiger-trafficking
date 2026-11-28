@@ -65,10 +65,10 @@ export const story: Section[] = [
   { kind: 'radar', frames: '63–67' },
   { kind: 'jailed', frames: '68–78' }, // trophy vs amulet, people jailed, the man behind bars, PEOPLE JAILED
   {
-    kind: 'opener', id: 'ch05', number: '05.', frames: '79–83', theme: 'pale', fromBlack: true,
+    kind: 'opener', id: 'ch05', number: '05.', frames: '80–83', theme: 'pale',
     title: 'People jailed',
     body: 'How many people were jailed for tiger trafficking, and where? The available records show how those numbers vary by year and country.',
-    enter: { title: 'none', body: 'none' }, exit: { title: 'right', body: 'above' },
+    enter: { title: 'right', body: 'below' }, exit: { title: 'right', body: 'above' }, // 80: the title comes in from the right
   },
   {
     kind: 'opener', id: 'ch06', number: '06.', frames: '84–85', theme: 'pale',
